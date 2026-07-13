@@ -1,0 +1,2 @@
+# yashilqollarmun
+# yashilqullarminiapp
