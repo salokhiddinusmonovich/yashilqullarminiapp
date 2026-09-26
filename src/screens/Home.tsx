@@ -2,7 +2,7 @@ import type { Bootstrap, EventItem, User } from "../types";
 import { t, fmt, relDay } from "../i18n";
 import { Avatar, EventCard, Flap, Icon, Empty, Seal, SecHead } from "../ui";
 import { openLink, share } from "../tg";
-import { badgesFor, eventStyle, tilt, useCountUp, useCountdown } from "../fx";
+import { badgesFor, eventStyle, sameRegion, tilt, useCountUp, useCountdown } from "../fx";
 
 interface Props {
   data: Bootstrap;
@@ -64,7 +64,7 @@ export function Home({ data, onOpenEvent, onGo }: Props) {
   const { user, events, community } = data;
   const now = Date.now() - 6 * 3600e3;
   const next = events.find((e) => e.my_status && new Date(e.date).getTime() >= now);
-  const open = events.filter((e) => !e.my_status).slice(0, 6);
+  const open = events.filter((e) => !e.my_status && sameRegion(user.region, e.region)).slice(0, 6);
   const badges = badgesFor(data);
   const unlocked = badges.filter((b) => b.done).length;
   const first = user.fullname.split(" ")[0];

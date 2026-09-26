@@ -20,13 +20,15 @@ export function Events({ events, userRegion, onOpen }: {
   }, [filter]);
 
   const list =
-    filter === "mine" ? events
+    // «Мой регион» — строго свой регион. Записи в других регионах (бывают
+    // у координаторов/основателей) — только во вкладке «Мои записи».
+    filter === "mine" ? events.filter((e) => sameRegion(userRegion, e.region))
     : filter === "joined" ? events.filter((e) => e.my_status)
     : all;
 
   return (
     <div class="screen">
-      <h1 class="title">{t("tabEvents")}<span class="title-count mono">{events.length}</span></h1>
+      <h1 class="title">{t("tabEvents")}{list && <span class="title-count mono">{list.length}</span>}</h1>
       <Seg<Filter>
         value={filter}
         onChange={(v) => { haptic("light"); setFilter(v); }}
@@ -43,9 +45,8 @@ export function Events({ events, userRegion, onOpen }: {
         </div>
       ) : (
         <Empty
-          icon={filter === "joined" ? "📝" : "🗓"}
-          title={filter === "joined" ? t("noJoined") : t("noEvents")}
-          text={filter === "joined" ? t("noNextHint") : t("noEventsHint")}
+          title={filter === "joined" ? t("noJoined") : !userRegion && filter === "mine" ? t("noRegion") : t("noEvents")}
+          text={filter === "joined" ? t("noNextHint") : userRegion || filter !== "mine" ? t("noEventsHint") : undefined}
         />
       )}
     </div>
