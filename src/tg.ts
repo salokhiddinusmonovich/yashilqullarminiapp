@@ -20,6 +20,7 @@ interface TgWebApp {
   openTelegramLink(url: string): void;
   openLink(url: string): void;
   showScanQrPopup(params: { text?: string }, cb?: (text: string) => boolean | void): void;
+  requestContact?(cb: (ok: boolean, res?: { responseUnsafe?: { contact?: { phone_number?: string } } }) => void): void;
   closeScanQrPopup(): void;
   onEvent(event: string, cb: (...args: unknown[]) => void): void;
   offEvent(event: string, cb: (...args: unknown[]) => void): void;
@@ -77,7 +78,7 @@ export function applyTheme() {
   const sysDark = tg ? tg.colorScheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   const dark = pref === "dark" || (pref === "auto" && sysDark);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
-  const bg = dark ? "#05080a" : "#f4f7f5";
+  const bg = dark ? "#0e1712" : "#efe7d6";
   try {
     tg?.setHeaderColor(bg);
     tg?.setBackgroundColor(bg);
@@ -108,4 +109,15 @@ export function openLink(url: string) {
   if (url.startsWith("https://t.me/") && tg) tg.openTelegramLink(url);
   else if (tg) tg.openLink(url);
   else window.open(url, "_blank");
+}
+
+/** Номер телефона из Telegram одним нажатием (Bot API 6.9+). null — отказ/не поддерживается. */
+export function requestPhone(): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!tg?.requestContact || !tg.isVersionAtLeast("6.9")) return resolve(null);
+    tg.requestContact((ok, res) => {
+      const phone = res?.responseUnsafe?.contact?.phone_number;
+      resolve(ok && phone ? (phone.startsWith("+") ? phone : `+${phone}`) : null);
+    });
+  });
 }

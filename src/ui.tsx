@@ -1,12 +1,12 @@
-// Общие компоненты: иконки, аватар, карточка мероприятия, шторка.
+// Общие компоненты в стиле «паспорт волонтёра»: билеты, печати, нашивки, табло.
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
 import type { EventItem } from "./types";
 import { t, fmt, relDay } from "./i18n";
 import { useBackButton } from "./tg";
-import { eventStyle } from "./fx";
+import { eventStyle, tilt } from "./fx";
 
-const P = { fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" } as const;
+const P = { fill: "none", stroke: "currentColor", "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round" } as const;
 
 export const Icon = {
   home: () => <svg viewBox="0 0 24 24" {...P}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>,
@@ -21,9 +21,29 @@ export const Icon = {
   check: () => <svg viewBox="0 0 24 24" {...P}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>,
   chevron: () => <svg viewBox="0 0 24 24" {...P}><path d="m9 6 6 6-6 6" /></svg>,
   search: () => <svg viewBox="0 0 24 24" {...P}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>,
-  leaf: () => <svg viewBox="0 0 24 24" {...P}><path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15zM5 19l7-7" /></svg>,
   send: () => <svg viewBox="0 0 24 24" {...P}><path d="M21 3 3 10.5l7 2.5 2.5 7z" /><path d="m10 13 4-4" /></svg>,
+  edit: () => <svg viewBox="0 0 24 24" {...P}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>,
+  camera: () => <svg viewBox="0 0 24 24" {...P}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>,
+  lock: () => <svg viewBox="0 0 24 24" {...P}><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" /></svg>,
+  globe: () => <svg viewBox="0 0 24 24" {...P}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" /></svg>,
+  plane: () => <svg viewBox="0 0 24 24" {...P}><path d="M21.5 4.5 2.5 11l7 2.5 2.5 7 9.5-16z" /></svg>,
+  // рисованный лист — фирменный знак
+  leaf: () => (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 52C10 30 24 12 52 10c2 26-14 42-38 42z" />
+      <path d="M12 52C22 40 32 30 44 20M24 40l-1-9M31 33l8-1M28 36l-3-6" />
+    </svg>
+  ),
 };
+
+/** Фирменный знак: лист в круге, как печать организации. */
+export function Seal({ size = 44 }: { size?: number }) {
+  return (
+    <span class="seal" style={{ width: size, height: size }}>
+      <Icon.leaf />
+    </span>
+  );
+}
 
 export function Avatar({ src, name, size = 44 }: { src: string | null; name: string; size?: number }) {
   const letter = (name || "?").trim().charAt(0).toUpperCase();
@@ -34,11 +54,14 @@ export function Avatar({ src, name, size = 44 }: { src: string | null; name: str
   );
 }
 
-export function DateBadge({ iso }: { iso: string }) {
+/** Редакционный заголовок раздела: «01 — Ближайшее мероприятие». */
+export function SecHead({ n, title, action }: { n: string; title: string; action?: ComponentChildren }) {
   return (
-    <div class="datebadge">
-      <b>{fmt.day(iso)}</b>
-      <span>{fmt.monthShort(iso)}</span>
+    <div class="sechead">
+      <span class="sechead-n">{n}</span>
+      <h2>{title}</h2>
+      <span class="sechead-rule" />
+      {action}
     </div>
   );
 }
@@ -50,42 +73,75 @@ export function seatsInfo(e: EventItem) {
 }
 
 export function StatusPill({ e }: { e: EventItem }) {
-  if (e.my_status === "attended") return <span class="pill pill-ok"><Icon.check />{t("attended")}</span>;
-  if (e.my_status) return <span class="pill pill-ok"><Icon.check />{t("registered")}</span>;
+  if (e.my_status === "attended") return <span class="tag tag-ok"><Icon.check />{t("attended")}</span>;
+  if (e.my_status) return <span class="tag tag-ok"><Icon.check />{t("registered")}</span>;
   const s = seatsInfo(e);
-  if (s.full) return <span class="pill pill-muted">{t("full")}</span>;
-  if (s.left <= 10) return <span class="pill pill-warn">{t("spotsLeft", { n: s.left })}</span>;
+  if (s.full) return <span class="tag tag-muted">{t("full")}</span>;
+  if (s.left <= 10) return <span class="tag tag-warn">{t("spotsLeft", { n: s.left })}</span>;
   return null;
 }
 
+/** Мероприятие как билет: основная часть + отрывной корешок с датой. */
 export function EventCard({ e, onOpen, showRegion, compact }: {
   e: EventItem; onOpen: () => void; showRegion?: boolean; compact?: boolean;
 }) {
   const s = seatsInfo(e);
   const rel = relDay(e.date);
   return (
-    <button class={`ecard tap ${compact ? "compact" : ""}`} style={eventStyle(e.id)} onClick={onOpen}>
-      <div class="ecard-media">
-        {e.photo ? <img src={e.photo} alt="" loading="lazy" decoding="async" /> : <div class="ecard-ph"><Icon.leaf /></div>}
-        <div class="ecard-shade" />
-        <DateBadge iso={e.date} />
-        {rel && <span class="rel">{rel}</span>}
-        <div class="ecard-over">
-          <div class="ecard-title">{e.title}</div>
-          <div class="meta light">
-            <span><Icon.clock />{fmt.time(e.date)}</span>
+    <button class={`ticket tap ${compact ? "compact" : ""}`} style={eventStyle(e.id)} onClick={onOpen}>
+      {e.photo && !compact && (
+        <div class="ticket-photo"><img src={e.photo} alt="" loading="lazy" decoding="async" /></div>
+      )}
+      <div class="ticket-row">
+        <div class="ticket-main">
+          <div class="ticket-kicker">
+            <span class="ticket-no">№ {String(e.id).padStart(4, "0")}</span>
+            {rel && <span class="ticket-rel">{rel}</span>}
+          </div>
+          <div class="ticket-title">{e.title}</div>
+          <div class="meta">
             <span><Icon.pin />{showRegion ? `${e.location} · ${e.region_label}` : e.location}</span>
           </div>
+          <div class="ticket-seats">
+            <div class="dots">
+              {Array.from({ length: 10 }, (_, i) => <i key={i} class={i < Math.round(s.pct / 10) ? "on" : ""} />)}
+            </div>
+            <span class="mono small">{s.reg}/{e.max}</span>
+          </div>
+          <StatusPill e={e} />
         </div>
-      </div>
-      <div class="ecard-body">
-        <div class="ecard-foot">
-          <div class="bar"><i style={{ width: `${s.pct}%` }} /></div>
-          <span class="muted small">{t("spots", { n: s.reg, max: e.max })}</span>
+        <div class="ticket-stub">
+          <span class="stub-day">{fmt.day(e.date)}</span>
+          <span class="stub-mon">{fmt.monthShort(e.date)}</span>
+          <span class="stub-time">{fmt.time(e.date)}</span>
+          <span class="stub-admit">{t("admit")}</span>
         </div>
-        <StatusPill e={e} />
       </div>
     </button>
+  );
+}
+
+/** Табло с перекидными цифрами (как на вокзале). */
+export function Flap({ value, label }: { value: number; label: string }) {
+  const v = String(value).padStart(2, "0");
+  return (
+    <div class="flap">
+      <div class="flap-digits">{v.split("").map((d, i) => <span key={i + d} class="flap-d">{d}</span>)}</div>
+      <small>{label}</small>
+    </div>
+  );
+}
+
+/** Печать в паспорте за посещённое мероприятие. */
+export function Stamp({ title, date, seed }: { title: string; date: string; seed: number }) {
+  const inks = ["#3f9d63", "#d4623a", "#3f86a8", "#b34a6c", "#7f9a35"];
+  return (
+    <div class={`stamp stamp-${seed % 3}`} style={{ "--ink-s": inks[seed % inks.length], transform: `rotate(${tilt(seed, 9)})` } as any}>
+      <span class="stamp-top">YASHIL QO'LLAR</span>
+      <b class="stamp-title">{title}</b>
+      <span class="stamp-date">{fmt.dayMonth(date)} · {new Date(date).getFullYear()}</span>
+      <span class="stamp-ok">✓</span>
+    </div>
   );
 }
 
@@ -118,10 +174,10 @@ export function Seg<T extends string>({ value, options, onChange }: {
   );
 }
 
-export function Empty({ icon, title, text }: { icon: string; title: string; text?: string }) {
+export function Empty({ title, text }: { icon?: string; title: string; text?: string }) {
   return (
     <div class="empty">
-      <div class="empty-ico">{icon}</div>
+      <Seal size={56} />
       <div class="empty-title">{title}</div>
       {text && <div class="muted">{text}</div>}
     </div>

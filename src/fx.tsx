@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { Bootstrap } from "./types";
 import type { Key } from "./i18n";
 
-const COLORS = ["#22c55e", "#4ade80", "#06b6d4", "#a78bfa", "#f59e0b", "#f472b6", "#facc15"];
+const COLORS = ["#6cc48a", "#f0b84a", "#e0764a", "#6fa9c7", "#d27496", "#efe7d6"];
 
 /** Лёгкое конфетти на CSS — без библиотек, ~40 частиц, удаляется само. */
 export function confetti() {
@@ -57,16 +57,16 @@ export function useCountdown(iso: string) {
   return { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 };
 }
 
-/** Цвет мероприятия — стабильный по id, чтобы лента не была однотонной. */
-const HUES: [string, string][] = [
-  ["#10b981", "#047857"], ["#06b6d4", "#0e7490"], ["#8b5cf6", "#5b21b6"],
-  ["#f59e0b", "#b45309"], ["#ec4899", "#9d174d"], ["#22c55e", "#15803d"],
-];
-export const eventColors = (id: number) => HUES[id % HUES.length];
-export const eventStyle = (id: number) => {
-  const [a, b] = eventColors(id);
-  return { "--c1": a, "--c2": b } as Record<string, string>;
+/** «Чернила» мероприятия — стабильные по id, землистые цвета вместо неона. */
+export const INKS = ["#3f9d63", "#e0a030", "#d4623a", "#3f86a8", "#b34a6c", "#7f9a35"];
+export const eventColors = (id: number): [string, string] => {
+  const c = INKS[id % INKS.length];
+  return [c, c];
 };
+export const eventStyle = (id: number) => ({ "--ink-c": INKS[id % INKS.length] } as Record<string, string>);
+
+/** Небольшой «ручной» наклон — печати и нашивки лежат не идеально ровно. */
+export const tilt = (seed: number, max = 7) => `${((seed * 37) % (max * 2 + 1)) - max}deg`;
 
 export interface Badge { id: string; icon: string; name: Key; desc: Key; done: boolean; progress?: [number, number] }
 

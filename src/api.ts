@@ -1,6 +1,6 @@
 // API-клиент Mini App. Бэкенд — тот же Django, что у бота (API/webapp.py).
 import { tg } from "./tg";
-import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person } from "./types";
+import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch } from "./types";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE || "https://api.yashilqollar.uz").replace(/\/$/, "");
 
@@ -50,7 +50,7 @@ async function request<T>(path: string, init: RequestInit = {}, retried = false)
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(init.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(access ? { Authorization: `Bearer ${access}` } : {}),
       ...init.headers,
     },
@@ -59,7 +59,11 @@ async function request<T>(path: string, init: RequestInit = {}, retried = false)
   if (res.status === 401 && !retried && (await login()).kind === "ok") {
     return request<T>(path, init, true);
   }
-  if (!res.ok) throw new Error(String(res.status));
+  if (!res.ok) {
+    const err = new Error(String(res.status)) as Error & { body?: unknown };
+    try { err.body = await res.json(); } catch { /* */ }
+    throw err;
+  }
   return (res.headers.get("content-type") || "").includes("json") ? res.json() : (res.text() as Promise<T>);
 }
 
@@ -68,6 +72,23 @@ const post = <T>(path: string, body: unknown) => request<T>(path, { method: "POS
 export const api = {
   async bootstrap() {
     const data = await request<Bootstrap>("/webapp/bootstrap/");
+    remember(data);
+    return data;
+  },
+  async saveProfile(patch: ProfilePatch) {
+    const data = await request<Bootstrap>("/webapp/me/", { method: "PATCH", body: JSON.stringify(patch) });
+    remember(data);
+    return data;
+  },
+  async uploadPhoto(file: File) {
+    const fd = new FormData();
+    fd.append("photo", file);
+    const data = await request<Bootstrap>("/webapp/me/photo/", { method: "POST", body: fd });
+    remember(data);
+    return data;
+  },
+  async setPassword(password: string) {
+    const data = await post<Bootstrap>("/webapp/me/password/", { password });
     remember(data);
     return data;
   },

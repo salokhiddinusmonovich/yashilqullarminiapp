@@ -5,7 +5,15 @@ export type Lang = "uz" | "ru" | "en";
 export interface User {
   id: number;
   tg_id: number | null;
+  username: string | null;
   fullname: string;
+  email: string | null;
+  phone: string | null;
+  age: number | null;
+  education_place: string | null;
+  experience: string | null;
+  has_password: boolean;
+  auth_provider: "telegram" | "email" | "google";
   photo: string | null;
   role: string;
   role_label: string;
@@ -49,7 +57,10 @@ export interface Bootstrap {
   history: { id: number; title: string; date: string }[];
   bot_username: string;
   community?: Community;
+  regions: [string, string][];
 }
+
+export type ProfilePatch = Partial<Pick<User, "fullname" | "region" | "phone" | "email" | "age" | "education_place" | "experience">>;
 
 export interface Person {
   id: number;

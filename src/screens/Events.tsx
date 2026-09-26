@@ -24,7 +24,7 @@ export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: Ev
 
   return (
     <div class="screen">
-      <h1 class="title">{t("tabEvents")}</h1>
+      <h1 class="title">{t("tabEvents")}<span class="title-count mono">{events.length}</span></h1>
       <Seg<Filter>
         value={filter}
         onChange={(v) => { haptic("light"); setFilter(v); }}
@@ -88,17 +88,19 @@ export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
   const close = () => { setState("idle"); onClose(); };
   const joined = !!e.my_status || state === "done";
   const link = `https://t.me/${bot}?startapp=event_${e.id}`;
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.location}, ${e.region_label}, Uzbekistan`)}`;
 
   return (
     <Sheet open onClose={close}>
-      <div class="sheet-hero" style={eventStyle(e.id)}>
-        {e.photo ? <img src={e.photo} alt="" /> : <div class="ecard-ph big"><Icon.leaf /></div>}
-        <div class="ecard-shade" />
-        <div class="sheet-hero-text">
-          <StatusPill e={e} />
+      <div class="sheet-head" style={eventStyle(e.id)}>
+        {e.photo && <img class="sheet-photo" src={e.photo} alt="" />}
+        <div class="sheet-head-text">
+          <div class="ticket-kicker">
+            <span class="ticket-no">№ {String(e.id).padStart(4, "0")}</span>
+            <StatusPill e={e} />
+          </div>
           <h2 class="sheet-title">{e.title}</h2>
         </div>
+        <div class="perf" />
       </div>
       <div class="sheet-body">
         <div class="facts">
@@ -111,10 +113,9 @@ export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
           </div>
         </div>
 
-        <div class="quick">
-          <button class="tap" onClick={() => share(link, t("shareText", { title: e.title }))}><Icon.send />{t("share")}</button>
-          <button class="tap" onClick={() => openLink(mapUrl)}><Icon.pin />{t("map")}</button>
-        </div>
+        <button class="quick-btn tap" onClick={() => share(link, t("shareText", { title: e.title }))}>
+          <Icon.send />{t("share")}
+        </button>
 
         {e.description && <p class="desc">{e.description}</p>}
 

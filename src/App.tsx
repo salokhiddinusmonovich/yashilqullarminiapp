@@ -99,7 +99,7 @@ export default function App() {
         {tab === "qr" && <QR data={data} />}
         {tab === "scan" && staff && <Scan />}
         {tab === "top" && <Top />}
-        {tab === "profile" && <Profile data={data} onLang={changeLang} />}
+        {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} />}
       </main>
 
       <nav class="tabbar">
@@ -120,7 +120,8 @@ function Splash() {
   return (
     <div class="splash">
       <div class="splash-logo"><Icon.leaf /></div>
-      <div class="splash-name">Yashil Qo'llar</div>
+      <div class="splash-name display">Yashil Qo'llar</div>
+      <div class="mono label-xs">{t("passport").toUpperCase()}</div>
     </div>
   );
 }

@@ -13,7 +13,9 @@ export const DEV_DATA: Bootstrap = {
   bot_username: "yashilqollarbot",
   community: { volunteers: 1234, events: 48, checkins: 2310, regions: 14 },
   user: {
-    id: 1, tg_id: 1, fullname: "Salokhiddin Usmonov", photo: null, role: "coordinator", role_label: "Koordinator",
+    id: 1, tg_id: 1, username: "salokhiddin", fullname: "Salokhiddin Usmonov", photo: null,
+    email: "usmonovsalokhiddin11@gmail.com", phone: "+998901234567", age: 20, education_place: "TDIU", experience: null,
+    has_password: false, auth_provider: "telegram", role: "coordinator", role_label: "Koordinator",
     is_staff: true, is_admin: true, balance: 120, rank: "🌱 Nihol", rank_next_at: 150,
     region: "tashkent_s", region_label: "Toshkent shahri", attended_count: 12, lang: "uz",
   },
@@ -25,5 +27,8 @@ export const DEV_DATA: Bootstrap = {
   history: [
     { id: 10, title: "Subbotnik — Chilonzor", date: d(-12) },
     { id: 11, title: "Plogging — Magic City", date: d(-30) },
+    { id: 12, title: "Daraxt ekish — Sergeli", date: d(-45) },
+    { id: 13, title: "Eko-seminar TDIU", date: d(-60) },
   ],
+  regions: [["tashkent_s", "Toshkent shahri"], ["tashkent_v", "Toshkent viloyati"], ["samarkand", "Samarqand viloyati"], ["bukhara", "Buxoro viloyati"]],
 };
