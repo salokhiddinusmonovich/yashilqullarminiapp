@@ -1,9 +1,14 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import preact from "@preact/preset-vite";
 
+// Preact вместо React: тот же JSX, но ~4 КБ вместо ~45 КБ —
+// приложение открывается в Telegram почти мгновенно даже на слабом 3G.
 export default defineConfig({
-    plugins: [react()],
-    server: {
-        port: 5174, // отдельный порт от основного сайта (у него скорее всего 5173)
-    },
+  plugins: [preact()],
+  server: { port: 5174 },
+  build: {
+    target: "es2020",
+    cssCodeSplit: false,
+    assetsInlineLimit: 8192,
+  },
 });

@@ -1,134 +1,137 @@
-import { useEffect, useState } from "react";
-import { ENDPOINTS } from "./config/api";
+import { useEffect, useState } from "preact/hooks";
+import type { JSX } from "preact";
+import type { Bootstrap, EventItem, Lang } from "./types";
+import { api, cachedBootstrap, login } from "./api";
+import { setLang, t } from "./i18n";
+import { haptic, openLink, tg } from "./tg";
+import { Icon } from "./ui";
+import { Home } from "./screens/Home";
+import { Events, EventSheet } from "./screens/Events";
+import { Profile, QR, Top } from "./screens/Others";
+import { Scan } from "./screens/Scan";
+import { DEV_DATA } from "./dev";
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: {
-        initData: string;
-        ready: () => void;
-        expand: () => void;
-        setHeaderColor?: (color: string) => void;
-        setBackgroundColor?: (color: string) => void;
-        colorScheme?: "light" | "dark";
-      };
-    };
-  }
-}
-
-interface MeUser {
-  fullname: string; photo: string | null; role: string; balance: number; rank: string;
-}
+type Tab = "home" | "events" | "qr" | "scan" | "top" | "profile";
+type Status = "loading" | "ready" | "unregistered" | "error" | "outside";
 
 export default function App() {
-  const [status, setStatus] = useState<"loading" | "ready" | "not-telegram" | "error">("loading");
-  const [user, setUser] = useState<MeUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  // Мгновенный старт: показываем прошлые данные из кэша, свежие подменят их через ~300 мс
+  const [data, setData] = useState<Bootstrap | null>(() => {
+    const c = cachedBootstrap();
+    if (c) setLang(c.user.lang);
+    return c;
+  });
+  const [status, setStatus] = useState<Status>(data ? "ready" : "loading");
+  const [tab, setTab] = useState<Tab>("home");
+  const [sheet, setSheet] = useState<EventItem | null>(null);
+  const [bot, setBot] = useState("yashilqollarbot");
 
-  useEffect(() => {
-    // Красим html/body напрямую — иначе после tg.expand() реальная высота
-    // вьюпорта может оказаться больше нашего контента, и в "хвосте" будет
-    // видна дефолтная тема Telegram (тот самый серо-синий фон).
-    document.documentElement.style.background = "#060606";
-    document.body.style.background = "#060606";
-    document.body.style.minHeight = "100vh";
-  }, []);
-
-  useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-
-    if (!tg || !tg.initData) {
-      // Локальная разработка (npm run dev) без реального Telegram —
-      // подставляем тестового юзера, чтобы можно было верстать/тестировать
-      // экраны, не открывая настоящий Telegram каждый раз.
-      // import.meta.env.DEV — true ТОЛЬКО при `npm run dev`, в проде
-      // (`npm run build`) это условие никогда не сработает.
-      if (import.meta.env.DEV) {
-        setUser({
-          fullname: "Test Volunteer",
-          photo: null,
-          role: "volunteer",
-          balance: 120,
-          rank: "🌱 Nihol (Росток)",
-        });
-        setToken("dev-fake-token");
-        setStatus("ready");
-        return;
-      }
-      setStatus("not-telegram");
+  async function load() {
+    if (!tg) {
+      if (import.meta.env.DEV) { apply(DEV_DATA); return; }
+      setStatus("outside");
       return;
     }
-
-    tg.ready();
-    tg.expand();
-    tg.setBackgroundColor?.("#060606");
-    tg.setHeaderColor?.("#060606");
-
-    fetch(ENDPOINTS.loginTelegramWebApp, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ init_data: tg.initData }),
-    })
-      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-      .then(data => {
-        setToken(data.access);
-        setUser(data.user);
-        setStatus("ready");
-      })
-      .catch(() => setStatus("error"));
-  }, []);
-
-  if (status === "loading") {
-    return (
-      <div style={styles.center}>
-        <div style={styles.spinner} />
-      </div>
-    );
+    const r = await login();
+    if (r.kind === "ok") apply(r.data, true);
+    else if (r.kind === "unregistered") { setBot(r.bot); setStatus("unregistered"); }
+    else if (!data) setStatus("error");
   }
 
-  if (status === "not-telegram") {
-    return (
-      <div style={styles.center}>
-        <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: 24, fontSize: 14 }}>
-          Bu ilova faqat Telegram ichida ochiladi.<br />Botga o'ting va menyu tugmasini bosing.
-        </p>
-      </div>
-    );
+  function apply(d: Bootstrap, fresh = false) {
+    setLang(d.user.lang);
+    setData(d);
+    setStatus("ready");
+    // Ссылка из бота «открыть мероприятие»: ...?event=42
+    if (fresh) {
+      const raw = new URLSearchParams(location.search).get("event") || tg?.initDataUnsafe.start_param?.replace("event_", "");
+      const ev = raw ? d.events.find((e) => e.id === Number(raw)) : undefined;
+      if (ev) setSheet(ev);
+    }
   }
 
-  if (status === "error" || !user) {
-    return (
-      <div style={styles.center}>
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Kirishda xatolik yuz berdi. Qayta urinib ko'ring.</p>
-      </div>
-    );
+  useEffect(() => { load(); }, []);
+
+  function go(next: Tab) {
+    if (next === tab) return;
+    haptic("light");
+    setTab(next);
+    window.scrollTo({ top: 0 });
   }
+
+  function onJoined(ev: EventItem) {
+    setData((d) => d && { ...d, events: d.events.map((e) => (e.id === ev.id ? ev : e)) });
+    setSheet(ev);
+    api.bootstrap().then((d) => apply(d)).catch(() => {});
+  }
+
+  async function changeLang(l: Lang) {
+    setLang(l);
+    setData((d) => d && { ...d, user: { ...d.user, lang: l } });
+    try { apply(await api.setLang(l)); } catch { /* */ }
+  }
+
+  if (status === "loading") return <Splash />;
+  if (status === "outside") return <Message icon="📱" title={t("onlyTelegram")} />;
+  if (status === "error") {
+    return <Message icon="📡" title={t("errTitle")} text={t("errText")} action={[t("retry"), () => { setStatus("loading"); load(); }]} />;
+  }
+  if (status === "unregistered" || !data) {
+    return <Message icon="🌱" title={t("unregTitle")} text={t("unregText")} action={[t("openBot"), () => openLink(`https://t.me/${bot}?start=`)]} />;
+  }
+
+  const staff = data.user.is_staff;
+  const tabs: { id: Tab; label: string; icon: () => JSX.Element; center?: boolean }[] = [
+    { id: "home", label: t("tabHome"), icon: Icon.home },
+    { id: "events", label: t("tabEvents"), icon: Icon.cal },
+    staff
+      ? { id: "scan", label: t("tabScan"), icon: Icon.scan, center: true }
+      : { id: "qr", label: t("tabQr"), icon: Icon.qr, center: true },
+    { id: "top", label: t("tabTop"), icon: Icon.trophy },
+    { id: "profile", label: t("tabProfile"), icon: Icon.user },
+  ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060606", color: "#fff", padding: "24px 18px", fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
-        <div style={{ width: 60, height: 60, borderRadius: "50%", overflow: "hidden", background: "rgba(34,197,94,0.15)", border: "1.5px solid rgba(34,197,94,0.4)", flexShrink: 0 }}>
-          {user.photo && <img src={user.photo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-        </div>
-        <div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{user.fullname}</div>
-          <div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600 }}>{user.rank}</div>
-        </div>
-      </div>
+    <div class="app">
+      <main key={tab} class="fade">
+        {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} />}
+        {tab === "events" && <Events events={data.events} onOpen={setSheet} />}
+        {tab === "qr" && <QR data={data} />}
+        {tab === "scan" && staff && <Scan />}
+        {tab === "top" && <Top />}
+        {tab === "profile" && <Profile data={data} onLang={changeLang} />}
+      </main>
 
-      <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 14, padding: "16px 18px", marginBottom: 20 }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: ".05em" }}>Eco-points</div>
-        <div style={{ fontSize: 28, fontWeight: 800, color: "#22c55e" }}>{user.balance}</div>
-      </div>
+      <nav class="tabbar">
+        {tabs.map((x) => (
+          <button key={x.id} class={`tab tap ${tab === x.id ? "on" : ""} ${x.center ? "center" : ""}`} onClick={() => go(x.id)}>
+            <span class="tab-ico"><x.icon /></span>
+            <span class="tab-label">{x.label}</span>
+          </button>
+        ))}
+      </nav>
 
-      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
-        Bu — Mini App uchun boshlang'ich ekran. Bu yerga loyihalar ro'yxati, ularga yozilish, va boshqa funksiyalarni qo'shish mumkin.
-      </p>
+      <EventSheet key={sheet?.id} e={sheet} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  center: { minHeight: "100vh", background: "#060606", display: "flex", alignItems: "center", justifyContent: "center" },
-  spinner: { width: 32, height: 32, borderRadius: "50%", border: "3px solid rgba(34,197,94,0.15)", borderTopColor: "#22c55e", animation: "spin .8s linear infinite" },
-};
+function Splash() {
+  return (
+    <div class="splash">
+      <div class="splash-logo"><Icon.leaf /></div>
+      <div class="splash-name">Yashil Qo'llar</div>
+    </div>
+  );
+}
+
+function Message({ icon, title, text, action }: { icon: string; title: string; text?: string; action?: [string, () => void] }) {
+  return (
+    <div class="splash">
+      <div class="big-emoji">{icon}</div>
+      <div class="msg-title">{title}</div>
+      {text && <div class="muted center">{text}</div>}
+      {action && <button class="btn btn-primary tap" onClick={action[1]}>{action[0]}</button>}
+    </div>
+  );
+}

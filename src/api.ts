@@ -1,0 +1,89 @@
+// API-клиент Mini App. Бэкенд — тот же Django, что у бота (API/webapp.py).
+import { tg } from "./tg";
+import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person } from "./types";
+
+export const API_BASE = (import.meta.env.VITE_API_BASE || "https://api.yashilqollar.uz").replace(/\/$/, "");
+
+const CACHE_KEY = "yq_boot_v1";
+let access: string | null = null;
+
+/** Последние данные — чтобы при повторном открытии экран появлялся сразу, до ответа сервера. */
+export function cachedBootstrap(): Bootstrap | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? (JSON.parse(raw) as Bootstrap) : null;
+  } catch {
+    return null;
+  }
+}
+
+function remember(data: Bootstrap) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch { /* приватный режим */ }
+}
+
+export type LoginResult =
+  | { kind: "ok"; data: Bootstrap }
+  | { kind: "unregistered"; bot: string }
+  | { kind: "error" };
+
+/** Вход по initData — сервер сразу отдаёт и токен, и все данные главного экрана. */
+export async function login(): Promise<LoginResult> {
+  if (!tg) return { kind: "error" };
+  try {
+    const res = await fetch(`${API_BASE}/login/telegram-webapp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ init_data: tg.initData }),
+    });
+    if (!res.ok) return { kind: "error" };
+    const body = await res.json();
+    if (!body.registered) return { kind: "unregistered", bot: body.bot_username };
+    access = body.access;
+    remember(body.data);
+    return { kind: "ok", data: body.data };
+  } catch {
+    return { kind: "error" };
+  }
+}
+
+async function request<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(access ? { Authorization: `Bearer ${access}` } : {}),
+      ...init.headers,
+    },
+  });
+  // токен живёт час — если приложение долго было открыто, тихо перелогиниваемся
+  if (res.status === 401 && !retried && (await login()).kind === "ok") {
+    return request<T>(path, init, true);
+  }
+  if (!res.ok) throw new Error(String(res.status));
+  return (res.headers.get("content-type") || "").includes("json") ? res.json() : (res.text() as Promise<T>);
+}
+
+const post = <T>(path: string, body: unknown) => request<T>(path, { method: "POST", body: JSON.stringify(body) });
+
+export const api = {
+  async bootstrap() {
+    const data = await request<Bootstrap>("/webapp/bootstrap/");
+    remember(data);
+    return data;
+  },
+  join: (id: number) =>
+    post<{ result: "ok" | "already" | "gone" | "full" | "subscribe"; event?: EventItem; channel?: string }>(
+      `/webapp/events/${id}/join/`, {},
+    ),
+  async setLang(lang: string) {
+    const data = await post<Bootstrap>("/webapp/lang/", { lang });
+    remember(data);
+    return data;
+  },
+  qrSvg: () => request<string>("/webapp/qr.svg"),
+  top: () => request<Top>("/webapp/top/"),
+  staffEvents: () => request<StaffEvents>("/webapp/staff/events/"),
+  checkIn: (projectId: number, payload: { qr?: string; user_id?: number }) =>
+    post<CheckInResult>("/webapp/staff/checkin/", { project_id: projectId, ...payload }),
+  search: (q: string) => request<{ results: Person[] }>(`/webapp/staff/search/?q=${encodeURIComponent(q)}`),
+};
