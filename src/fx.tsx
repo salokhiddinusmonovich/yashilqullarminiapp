@@ -88,3 +88,11 @@ export function badgesFor(d: Bootstrap): Badge[] {
     { id: "team", icon: "🧭", name: "b_team", desc: "b_team_d", done: d.user.is_staff },
   ];
 }
+
+/** Ташкент-город и область — один регион (как на сервере, services.region_group). */
+export function sameRegion(userRegion: string | null, eventRegion: string) {
+  const tash = ["tashkent_s", "tashkent_v"];
+  if (!userRegion) return false;
+  if (tash.includes(userRegion)) return tash.includes(eventRegion);
+  return userRegion === eventRegion;
+}

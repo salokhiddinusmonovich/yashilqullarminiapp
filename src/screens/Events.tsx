@@ -4,11 +4,13 @@ import { t, fmt } from "../i18n";
 import { EventCard, Empty, Icon, Seg, Sheet, StatusPill, seatsInfo } from "../ui";
 import { api } from "../api";
 import { haptic, openLink, share } from "../tg";
-import { confetti, eventStyle } from "../fx";
+import { confetti, eventStyle, sameRegion } from "../fx";
 
 type Filter = "mine" | "all" | "joined";
 
-export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: EventItem) => void }) {
+export function Events({ events, userRegion, onOpen }: {
+  events: EventItem[]; userRegion: string | null; onOpen: (e: EventItem) => void;
+}) {
   const [filter, setFilter] = useState<Filter>("mine");
   const [all, setAll] = useState<EventItem[] | null>(null);
 
@@ -35,7 +37,9 @@ export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: Ev
         <div class="skel-list" />
       ) : list.length ? (
         <div class="list stagger">
-          {list.map((e) => <EventCard key={e.id} e={e} showRegion={filter === "all"} onOpen={() => onOpen(e)} />)}
+          {list.map((e) => (
+            <EventCard key={e.id} e={e} showRegion={filter === "all"} foreign={!sameRegion(userRegion, e.region)} onOpen={() => onOpen(e)} />
+          ))}
         </div>
       ) : (
         <Empty
@@ -48,11 +52,12 @@ export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: Ev
   );
 }
 
-type JoinState = "idle" | "loading" | "done" | "subscribe" | "gone" | "full";
+type JoinState = "idle" | "loading" | "done" | "subscribe" | "gone" | "full" | "region";
 
-export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
+export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: {
   e: EventItem | null;
   bot: string;
+  userRegion: string | null;
   onClose: () => void;
   onJoined: (e: EventItem) => void;
   onShowQr: () => void;
@@ -87,6 +92,7 @@ export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
 
   const close = () => { setState("idle"); onClose(); };
   const joined = !!e.my_status || state === "done";
+  const foreign = !joined && (state === "region" || !sameRegion(userRegion, e.region));
   const link = `https://t.me/${bot}?startapp=event_${e.id}`;
 
   return (
@@ -130,6 +136,7 @@ export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
             </button>
           </div>
         )}
+        {foreign && <div class="notice warn"><b>{t("otherRegion")}</b><div>{t("otherRegionHint", { region: e.region_label })}</div></div>}
         {state === "gone" && <div class="notice warn">{t("gone")}</div>}
         {state === "full" && <div class="notice warn">{t("fullErr")}</div>}
 
@@ -145,9 +152,9 @@ export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
             )}
           </>
         ) : (
-          <button class="btn btn-primary tap" disabled={s.full || state === "loading"} onClick={join}>
-            {state === "loading" ? <span class="spin" /> : <Icon.check />}
-            {state === "loading" ? t("registering") : s.full ? t("full") : t("register")}
+          <button class="btn btn-primary tap" disabled={foreign || s.full || state === "loading"} onClick={join}>
+            {state === "loading" ? <span class="spin" /> : foreign ? <Icon.pin /> : <Icon.check />}
+            {state === "loading" ? t("registering") : foreign ? t("otherRegion") : s.full ? t("full") : t("register")}
           </button>
         )}
       </div>

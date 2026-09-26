@@ -2,6 +2,7 @@
 import type { Lang } from "./types";
 
 const uz = {
+  otherRegion: "Boshqa hudud", otherRegionHint: "Bu tadbir {region} uchun. Faqat o'z hududingizdagi tadbirlarga yozilish mumkin.",
   dateLbl: "Sana",
   passport: "Volontyor pasporti", stamps: "Muhrlar", stampsEmpty: "Birinchi muhr birinchi tadbirdan keyin paydo bo'ladi",
   admit: "KIRISH", passTitle: "Eko-talon", member: "a'zo",
@@ -72,6 +73,7 @@ const uz = {
 type Dict = typeof uz;
 
 const ru: Dict = {
+  otherRegion: "Другой регион", otherRegionHint: "Это мероприятие для региона «{region}». Записаться можно только в своём регионе.",
   dateLbl: "Дата",
   passport: "Паспорт волонтёра", stamps: "Печати", stampsEmpty: "Первая печать появится после первого мероприятия",
   admit: "ВХОД", passTitle: "Эко-талон", member: "участник",
@@ -140,6 +142,7 @@ const ru: Dict = {
 };
 
 const en: Dict = {
+  otherRegion: "Other region", otherRegionHint: "This event is for {region}. You can only register in your own region.",
   dateLbl: "Date",
   passport: "Volunteer passport", stamps: "Stamps", stampsEmpty: "Your first stamp appears after your first event",
   admit: "ADMIT ONE", passTitle: "Eco pass", member: "member",

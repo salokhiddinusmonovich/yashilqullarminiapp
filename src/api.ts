@@ -94,7 +94,7 @@ export const api = {
   },
   allEvents: () => request<{ events: EventItem[] }>("/webapp/events/"),
   join: (id: number) =>
-    post<{ result: "ok" | "already" | "gone" | "full" | "subscribe"; event?: EventItem; channel?: string }>(
+    post<{ result: "ok" | "already" | "gone" | "full" | "region" | "subscribe"; event?: EventItem; channel?: string }>(
       `/webapp/events/${id}/join/`, {},
     ),
   async setLang(lang: string) {

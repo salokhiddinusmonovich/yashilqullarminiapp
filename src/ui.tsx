@@ -82,8 +82,8 @@ export function StatusPill({ e }: { e: EventItem }) {
 }
 
 /** Мероприятие как билет: основная часть + отрывной корешок с датой. */
-export function EventCard({ e, onOpen, showRegion, compact }: {
-  e: EventItem; onOpen: () => void; showRegion?: boolean; compact?: boolean;
+export function EventCard({ e, onOpen, showRegion, compact, foreign }: {
+  e: EventItem; onOpen: () => void; showRegion?: boolean; compact?: boolean; foreign?: boolean;
 }) {
   const s = seatsInfo(e);
   const rel = relDay(e.date);
@@ -108,7 +108,7 @@ export function EventCard({ e, onOpen, showRegion, compact }: {
             </div>
             <span class="mono small">{s.reg}/{e.max}</span>
           </div>
-          <StatusPill e={e} />
+          {foreign && !e.my_status ? <span class="tag tag-muted"><Icon.pin />{t("otherRegion")}</span> : <StatusPill e={e} />}
         </div>
         <div class="ticket-stub">
           <span class="stub-day">{fmt.day(e.date)}</span>

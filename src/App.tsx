@@ -95,7 +95,7 @@ export default function App() {
     <div class="app">
       <main key={tab} class="fade">
         {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} />}
-        {tab === "events" && <Events events={data.events} onOpen={setSheet} />}
+        {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
         {tab === "scan" && staff && <Scan />}
         {tab === "top" && <Top />}
@@ -111,7 +111,7 @@ export default function App() {
         ))}
       </nav>
 
-      <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
+      <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} userRegion={data.user.region} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>
   );
 }
