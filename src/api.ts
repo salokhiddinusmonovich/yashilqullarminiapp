@@ -71,6 +71,7 @@ export const api = {
     remember(data);
     return data;
   },
+  allEvents: () => request<{ events: EventItem[] }>("/webapp/events/"),
   join: (id: number) =>
     post<{ result: "ok" | "already" | "gone" | "full" | "subscribe"; event?: EventItem; channel?: string }>(
       `/webapp/events/${id}/join/`, {},

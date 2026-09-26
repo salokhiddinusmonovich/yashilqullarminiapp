@@ -111,7 +111,7 @@ export default function App() {
         ))}
       </nav>
 
-      <EventSheet key={sheet?.id} e={sheet} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
+      <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>
   );
 }

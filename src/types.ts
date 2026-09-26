@@ -36,11 +36,19 @@ export interface EventItem {
   chat_link: string | null;
 }
 
+export interface Community {
+  volunteers: number;
+  events: number;
+  checkins: number;
+  regions: number;
+}
+
 export interface Bootstrap {
   user: User;
   events: EventItem[];
   history: { id: number; title: string; date: string }[];
   bot_username: string;
+  community?: Community;
 }
 
 export interface Person {

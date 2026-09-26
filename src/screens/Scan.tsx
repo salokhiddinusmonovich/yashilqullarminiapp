@@ -6,6 +6,7 @@ import { t, fmt } from "../i18n";
 import { api } from "../api";
 import { Avatar, Empty, Icon } from "../ui";
 import { canScan, haptic, tg } from "../tg";
+import { confetti } from "../fx";
 
 interface FeedItem extends CheckInResult { key: number }
 
@@ -47,6 +48,7 @@ export function Scan() {
     try {
       const r = await api.checkIn(eventId, payload);
       haptic(r.result === "ok" ? "success" : r.result === "already" ? "warning" : "error");
+      if (r.result === "ok") confetti();
       const item = { ...r, key: Date.now() };
       setLast(item);
       setFeed((f) => [item, ...f].slice(0, 30));

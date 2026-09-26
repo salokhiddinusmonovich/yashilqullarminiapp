@@ -55,22 +55,38 @@ export function initTelegram() {
   tg.onEvent("themeChanged", applyTheme);
 }
 
-/** Своя палитра, но фон и текст — от Telegram, чтобы приложение выглядело «родным». */
+export type ThemePref = "dark" | "light" | "auto";
+const THEME_KEY = "yq_theme";
+
+export function getThemePref(): ThemePref {
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v === "dark" || v === "light" || v === "auto") return v;
+  } catch { /* */ }
+  return "dark"; // по умолчанию — фирменная тёмная тема
+}
+
+export function setThemePref(p: ThemePref) {
+  try { localStorage.setItem(THEME_KEY, p); } catch { /* */ }
+  applyTheme();
+}
+
+/** Фирменная палитра (не берём фон Telegram — у нас свой дизайн), шапку Telegram красим в тон. */
 export function applyTheme() {
-  const dark = tg ? tg.colorScheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  const root = document.documentElement;
-  root.dataset.theme = dark ? "dark" : "light";
-  const p = tg?.themeParams ?? {};
-  const bg = p.bg_color || (dark ? "#0b1110" : "#f3f6f4");
-  root.style.setProperty("--tg-bg", bg);
-  if (p.text_color) root.style.setProperty("--tg-text", p.text_color);
-  if (p.hint_color) root.style.setProperty("--tg-hint", p.hint_color);
-  if (p.secondary_bg_color) root.style.setProperty("--tg-bg2", p.secondary_bg_color);
+  const pref = getThemePref();
+  const sysDark = tg ? tg.colorScheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = pref === "dark" || (pref === "auto" && sysDark);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const bg = dark ? "#05080a" : "#f4f7f5";
   try {
     tg?.setHeaderColor(bg);
     tg?.setBackgroundColor(bg);
     tg?.setBottomBarColor?.(bg);
   } catch { /* старые клиенты */ }
+}
+
+export function share(url: string, text: string) {
+  openLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
 }
 
 /** Системная кнопка «назад» Telegram — пока открыт экран поверх основного. */

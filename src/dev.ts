@@ -11,6 +11,7 @@ const d = (days: number, h = 10) => {
 
 export const DEV_DATA: Bootstrap = {
   bot_username: "yashilqollarbot",
+  community: { volunteers: 1234, events: 48, checkins: 2310, regions: 14 },
   user: {
     id: 1, tg_id: 1, fullname: "Salokhiddin Usmonov", photo: null, role: "coordinator", role_label: "Koordinator",
     is_staff: true, is_admin: true, balance: 120, rank: "🌱 Nihol", rank_next_at: 150,

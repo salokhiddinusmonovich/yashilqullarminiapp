@@ -1,18 +1,48 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type { EventItem } from "../types";
 import { t, fmt } from "../i18n";
-import { EventCard, Empty, Icon, Sheet, StatusPill, seatsInfo } from "../ui";
+import { EventCard, Empty, Icon, Seg, Sheet, StatusPill, seatsInfo } from "../ui";
 import { api } from "../api";
-import { haptic, openLink } from "../tg";
+import { haptic, openLink, share } from "../tg";
+import { confetti, eventStyle } from "../fx";
+
+type Filter = "mine" | "all" | "joined";
 
 export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: EventItem) => void }) {
+  const [filter, setFilter] = useState<Filter>("mine");
+  const [all, setAll] = useState<EventItem[] | null>(null);
+
+  // «Все регионы» грузим только когда их действительно открыли
+  useEffect(() => {
+    if (filter === "all" && !all) api.allEvents().then((r) => setAll(r.events)).catch(() => setAll([]));
+  }, [filter]);
+
+  const list =
+    filter === "mine" ? events
+    : filter === "joined" ? events.filter((e) => e.my_status)
+    : all;
+
   return (
     <div class="screen">
       <h1 class="title">{t("tabEvents")}</h1>
-      {events.length ? (
-        <div class="list">{events.map((e) => <EventCard key={e.id} e={e} onOpen={() => onOpen(e)} />)}</div>
+      <Seg<Filter>
+        value={filter}
+        onChange={(v) => { haptic("light"); setFilter(v); }}
+        options={[["mine", t("filterMine")], ["all", t("filterAll")], ["joined", t("filterJoined")]]}
+      />
+      <div class="gap-y" />
+      {list === null ? (
+        <div class="skel-list" />
+      ) : list.length ? (
+        <div class="list stagger">
+          {list.map((e) => <EventCard key={e.id} e={e} showRegion={filter === "all"} onOpen={() => onOpen(e)} />)}
+        </div>
       ) : (
-        <Empty icon="🗓" title={t("noEvents")} text={t("noEventsHint")} />
+        <Empty
+          icon={filter === "joined" ? "📝" : "🗓"}
+          title={filter === "joined" ? t("noJoined") : t("noEvents")}
+          text={filter === "joined" ? t("noNextHint") : t("noEventsHint")}
+        />
       )}
     </div>
   );
@@ -20,8 +50,9 @@ export function Events({ events, onOpen }: { events: EventItem[]; onOpen: (e: Ev
 
 type JoinState = "idle" | "loading" | "done" | "subscribe" | "gone" | "full";
 
-export function EventSheet({ e, onClose, onJoined, onShowQr }: {
+export function EventSheet({ e, bot, onClose, onJoined, onShowQr }: {
   e: EventItem | null;
+  bot: string;
   onClose: () => void;
   onJoined: (e: EventItem) => void;
   onShowQr: () => void;
@@ -40,6 +71,7 @@ export function EventSheet({ e, onClose, onJoined, onShowQr }: {
       const r = await api.join(e.id);
       if (r.result === "ok" || r.result === "already") {
         haptic("success");
+        confetti();
         setState("done");
         if (r.event) onJoined(r.event);
       } else {
@@ -55,20 +87,35 @@ export function EventSheet({ e, onClose, onJoined, onShowQr }: {
 
   const close = () => { setState("idle"); onClose(); };
   const joined = !!e.my_status || state === "done";
+  const link = `https://t.me/${bot}?startapp=event_${e.id}`;
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.location}, ${e.region_label}, Uzbekistan`)}`;
 
   return (
     <Sheet open onClose={close}>
-      {e.photo && <img class="sheet-img" src={e.photo} alt="" />}
-      <div class="sheet-body">
-        <StatusPill e={e} />
-        <h2 class="sheet-title">{e.title}</h2>
-        <div class="facts">
-          <div><Icon.cal /><span>{fmt.full(e.date)}</span></div>
-          <div><Icon.clock /><span>{fmt.time(e.date)}</span></div>
-          <div><Icon.pin /><span>{e.location} · {e.region_label}</span></div>
-          <div><Icon.users /><span>{t("spots", { n: s.reg, max: e.max })}</span></div>
+      <div class="sheet-hero" style={eventStyle(e.id)}>
+        {e.photo ? <img src={e.photo} alt="" /> : <div class="ecard-ph big"><Icon.leaf /></div>}
+        <div class="ecard-shade" />
+        <div class="sheet-hero-text">
+          <StatusPill e={e} />
+          <h2 class="sheet-title">{e.title}</h2>
         </div>
-        <div class="bar big"><i style={{ width: `${s.pct}%` }} /></div>
+      </div>
+      <div class="sheet-body">
+        <div class="facts">
+          <div><span class="fact-ico"><Icon.cal /></span><span>{fmt.full(e.date)}</span></div>
+          <div><span class="fact-ico"><Icon.clock /></span><span>{fmt.time(e.date)}</span></div>
+          <div><span class="fact-ico"><Icon.pin /></span><span>{e.location} · {e.region_label}</span></div>
+          <div>
+            <span class="fact-ico"><Icon.users /></span>
+            <span class="grow">{t("spots", { n: s.reg, max: e.max })}<div class="bar"><i style={{ width: `${s.pct}%` }} /></div></span>
+          </div>
+        </div>
+
+        <div class="quick">
+          <button class="tap" onClick={() => share(link, t("shareText", { title: e.title }))}><Icon.send />{t("share")}</button>
+          <button class="tap" onClick={() => openLink(mapUrl)}><Icon.pin />{t("map")}</button>
+        </div>
+
         {e.description && <p class="desc">{e.description}</p>}
 
         {state === "done" && (

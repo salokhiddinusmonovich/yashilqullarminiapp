@@ -4,6 +4,7 @@ import { useEffect } from "preact/hooks";
 import type { EventItem } from "./types";
 import { t, fmt, relDay } from "./i18n";
 import { useBackButton } from "./tg";
+import { eventStyle } from "./fx";
 
 const P = { fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" } as const;
 
@@ -57,27 +58,32 @@ export function StatusPill({ e }: { e: EventItem }) {
   return null;
 }
 
-export function EventCard({ e, onOpen }: { e: EventItem; onOpen: () => void }) {
+export function EventCard({ e, onOpen, showRegion, compact }: {
+  e: EventItem; onOpen: () => void; showRegion?: boolean; compact?: boolean;
+}) {
   const s = seatsInfo(e);
   const rel = relDay(e.date);
   return (
-    <button class="ecard tap" onClick={onOpen}>
+    <button class={`ecard tap ${compact ? "compact" : ""}`} style={eventStyle(e.id)} onClick={onOpen}>
       <div class="ecard-media">
         {e.photo ? <img src={e.photo} alt="" loading="lazy" decoding="async" /> : <div class="ecard-ph"><Icon.leaf /></div>}
+        <div class="ecard-shade" />
         <DateBadge iso={e.date} />
         {rel && <span class="rel">{rel}</span>}
+        <div class="ecard-over">
+          <div class="ecard-title">{e.title}</div>
+          <div class="meta light">
+            <span><Icon.clock />{fmt.time(e.date)}</span>
+            <span><Icon.pin />{showRegion ? `${e.location} · ${e.region_label}` : e.location}</span>
+          </div>
+        </div>
       </div>
       <div class="ecard-body">
-        <div class="ecard-title">{e.title}</div>
-        <div class="meta">
-          <span><Icon.clock />{fmt.time(e.date)}</span>
-          <span><Icon.pin />{e.location}</span>
-        </div>
         <div class="ecard-foot">
           <div class="bar"><i style={{ width: `${s.pct}%` }} /></div>
           <span class="muted small">{t("spots", { n: s.reg, max: e.max })}</span>
         </div>
-        <div class="ecard-status"><StatusPill e={e} /></div>
+        <StatusPill e={e} />
       </div>
     </button>
   );
@@ -96,6 +102,18 @@ export function Sheet({ open, onClose, children }: { open: boolean; onClose: () 
         <div class="grab" />
         {children}
       </div>
+    </div>
+  );
+}
+
+export function Seg<T extends string>({ value, options, onChange }: {
+  value: T; options: [T, string][]; onChange: (v: T) => void;
+}) {
+  return (
+    <div class="seg">
+      {options.map(([v, label]) => (
+        <button key={v} class={`tap ${value === v ? "on" : ""}`} onClick={() => onChange(v)}>{label}</button>
+      ))}
     </div>
   );
 }
