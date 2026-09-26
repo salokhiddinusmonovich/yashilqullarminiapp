@@ -9,6 +9,7 @@ import { Home } from "./screens/Home";
 import { Events, EventSheet } from "./screens/Events";
 import { Profile, QR, Top } from "./screens/Others";
 import { Scan } from "./screens/Scan";
+import { ProfileSheet } from "./screens/People";
 import { DEV_DATA } from "./dev";
 
 type Tab = "home" | "events" | "qr" | "scan" | "top" | "profile";
@@ -25,6 +26,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("home");
   const [sheet, setSheet] = useState<EventItem | null>(null);
   const [bot, setBot] = useState("yashilqollarbot");
+  const [profileId, setProfileId] = useState<number | null>(null);
 
   async function load() {
     if (!tg) {
@@ -98,7 +100,7 @@ export default function App() {
         {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
         {tab === "scan" && staff && <Scan />}
-        {tab === "top" && <Top />}
+        {tab === "top" && <Top onOpenProfile={setProfileId} />}
         {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} />}
       </main>
 
@@ -111,6 +113,7 @@ export default function App() {
         ))}
       </nav>
 
+      <ProfileSheet id={profileId} onClose={() => setProfileId(null)} />
       <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} userRegion={data.user.region} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>
   );

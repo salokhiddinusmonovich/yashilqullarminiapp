@@ -4,7 +4,7 @@ import { useEffect } from "preact/hooks";
 import type { EventItem } from "./types";
 import { t, fmt, relDay } from "./i18n";
 import { useBackButton } from "./tg";
-import { eventStyle, tilt } from "./fx";
+import { eventStyle, isFounder, tilt } from "./fx";
 
 const P = { fill: "none", stroke: "currentColor", "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round" } as const;
 
@@ -182,4 +182,18 @@ export function Empty({ title, text }: { icon?: string; title: string; text?: st
       {text && <div class="muted">{text}</div>}
     </div>
   );
+}
+
+/** Золотая отметка основателя — рядом с именем везде, где человек появляется. */
+export function FounderMark({ size = 18 }: { size?: number }) {
+  return (
+    <span class="founder-mark" title={t("founder")} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 14.6 8.3 21.4 8.9 16.2 13.3 17.8 20 12 16.4 6.2 20 7.8 13.3 2.6 8.9 9.4 8.3z" /></svg>
+    </span>
+  );
+}
+
+/** Имя + отметка основателя. */
+export function Name({ name, role }: { name: string; role?: string | null }) {
+  return <span class="name-line">{name}{isFounder(role) && <FounderMark />}</span>;
 }

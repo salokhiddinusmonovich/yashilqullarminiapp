@@ -15,7 +15,7 @@ export const DEV_DATA: Bootstrap = {
   user: {
     id: 1, tg_id: 1, username: "salokhiddin", fullname: "Salokhiddin Usmonov", photo: null,
     email: "usmonovsalokhiddin11@gmail.com", phone: "+998901234567", age: 20, education_place: "TDIU", experience: null,
-    has_password: false, auth_provider: "telegram", role: "coordinator", role_label: "Koordinator",
+    has_password: false, auth_provider: "telegram", role: "Founder", role_label: "Asoschi",
     is_staff: true, is_admin: true, balance: 120, rank: "🌱 Nihol", rank_next_at: 150,
     region: "tashkent_s", region_label: "Toshkent shahri", attended_count: 12, lang: "uz",
   },

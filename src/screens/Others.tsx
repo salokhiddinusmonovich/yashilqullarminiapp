@@ -1,10 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
-import type { Bootstrap, Lang, Top as TopData } from "../types";
+import type { Bootstrap, Lang, TeamMember, Top as TopData } from "../types";
 import { t, LANG_LABELS } from "../i18n";
 import { api } from "../api";
-import { Avatar, Empty, Icon, Seg, SecHead, Stamp } from "../ui";
+import { Avatar, Empty, Icon, Name, Seg, SecHead, Stamp } from "../ui";
 import { getThemePref, haptic, openLink, setThemePref, share, type ThemePref } from "../tg";
-import { badgesFor, tilt } from "../fx";
+import { badgesFor, isFounder, tilt } from "../fx";
 import { PassportCard } from "./Home";
 import { EditProfile, PasswordSheet } from "./ProfileEdit";
 
@@ -60,42 +60,76 @@ export function QR({ data }: { data: Bootstrap }) {
   );
 }
 
-// ─────────────────── Рейтинг — табло ───────────────────
+// ─────────────────── Рейтинг и команда ───────────────────
 
-export function Top() {
+type TopTab = "rating" | "team";
+
+export function Top({ onOpenProfile }: { onOpenProfile: (id: number) => void }) {
+  const [tab, setTab] = useState<TopTab>("rating");
   const [d, setD] = useState<TopData | null>(null);
-  useEffect(() => { api.top().then(setD).catch(() => {}); }, []);
+  const [team, setTeam] = useState<TeamMember[] | null>(null);
 
-  if (!d) return <div class="screen"><h1 class="title">{t("topTitle")}</h1><div class="skel-list" /></div>;
+  useEffect(() => { api.top().then(setD).catch(() => {}); }, []);
+  useEffect(() => {
+    if (tab === "team" && !team) api.team().then((r) => setTeam(r.team)).catch(() => setTeam([]));
+  }, [tab]);
+
+  const open = (id: number) => { haptic("light"); onOpenProfile(id); };
 
   return (
     <div class="screen">
-      <h1 class="title">{t("topTitle")}</h1>
-      <div class="podium">
-        {[d.top[1], d.top[0], d.top[2]].map((p, i) => p && (
-          <div class={`pod pod-${[2, 1, 3][i]}`} key={p.id}>
-            <Avatar src={p.photo} name={p.fullname} size={[58, 72, 58][i]} />
-            <span class="medal" style={{ transform: `rotate(${tilt(i + 1, 10)})` }}>{[2, 1, 3][i]}</span>
-            <div class="pod-name">{p.me ? t("you") : p.fullname.split(" ")[0]}</div>
-            <div class="pod-pts mono">{p.balance}</div>
+      <h1 class="title">{tab === "rating" ? t("topTitle") : t("tabTeam")}</h1>
+      <Seg<TopTab> value={tab} onChange={(v) => { haptic("light"); setTab(v); }}
+        options={[["rating", t("tabRating")], ["team", t("tabTeam")]]} />
+      <div class="gap-y" />
+
+      {tab === "rating" && (!d ? <div class="skel-list" /> : (
+        <>
+          <div class="podium">
+            {[d.top[1], d.top[0], d.top[2]].map((p, i) => p && (
+              <button class={`pod pod-${[2, 1, 3][i]} tap`} key={p.id} onClick={() => open(p.id)}>
+                <Avatar src={p.photo} name={p.fullname} size={[58, 72, 58][i]} />
+                <span class="medal" style={{ transform: `rotate(${tilt(i + 1, 10)})` }}>{[2, 1, 3][i]}</span>
+                <div class="pod-name"><Name name={p.me ? t("you") : p.fullname.split(" ")[0]} role={p.role} /></div>
+                <div class="pod-pts mono">{p.balance}</div>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-      <div class="board-list">
-        {d.top.slice(3).map((p, i) => (
-          <div class={`board-row ${p.me ? "me" : ""}`} key={p.id}>
-            <span class="board-place mono">{String(i + 4).padStart(2, "0")}</span>
-            <Avatar src={p.photo} name={p.fullname} size={34} />
-            <span class="lname">{p.me ? `${p.fullname} · ${t("you")}` : p.fullname}</span>
-            <b class="mono">{p.balance}</b>
+          <div class="board-list">
+            {d.top.slice(3).map((p, i) => (
+              <button class={`board-row tap ${p.me ? "me" : ""}`} key={p.id} onClick={() => open(p.id)}>
+                <span class="board-place mono">{String(i + 4).padStart(2, "0")}</span>
+                <Avatar src={p.photo} name={p.fullname} size={34} />
+                <span class="lname"><Name name={p.me ? `${p.fullname} · ${t("you")}` : p.fullname} role={p.role} /></span>
+                <b class="mono">{p.balance}</b>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-      <div class="myplace">
-        <span class="mono label-xs">{t("myPlace").toUpperCase()}</span>
-        <b class="display">#{d.my_place}</b>
-        <span class="mono">{d.my_balance} {t("points")}</span>
-      </div>
+          <div class="myplace">
+            <span class="mono label-xs">{t("myPlace").toUpperCase()}</span>
+            <b class="display">#{d.my_place}</b>
+            <span class="mono">{d.my_balance} {t("points")}</span>
+          </div>
+        </>
+      ))}
+
+      {tab === "team" && (!team ? <div class="skel-list" /> : team.length === 0 ? <Empty title={t("teamEmpty")} /> : (
+        <>
+          <p class="muted small team-hint">{t("teamHint")}</p>
+          <div class="team">
+            {team.map((m) => (
+              <button key={m.id} class={`member tap ${isFounder(m.role) ? "founder" : ""}`} onClick={() => open(m.id)}>
+                <Avatar src={m.photo} name={m.fullname} size={52} />
+                <div class="member-text">
+                  <b><Name name={m.fullname} role={m.role} /></b>
+                  <span class="mono small">{isFounder(m.role) ? t("founder") : m.role_label}</span>
+                </div>
+                <Icon.chevron />
+              </button>
+            ))}
+          </div>
+        </>
+      ))}
     </div>
   );
 }
@@ -119,7 +153,7 @@ export function Profile({ data, onLang, onData }: {
         <button class="btn btn-line small-btn tap" onClick={() => setEditing(true)}><Icon.edit />{t("edit")}</button>
       </div>
 
-      <PassportCard data={data} onGo={() => setEditing(true)} />
+      <PassportCard user={user} onGo={() => setEditing(true)} />
 
       <SecHead n="01" title={t("stamps")} action={<span class="mono small muted">{history.length}</span>} />
       {history.length ? (

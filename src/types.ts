@@ -70,8 +70,33 @@ export interface Person {
   balance?: number;
 }
 
+export interface PublicUser {
+  id: number;
+  fullname: string;
+  photo: string | null;
+  role: string;
+  role_label: string;
+  balance: number;
+  rank: string;
+  rank_next_at: number | null;
+  region: string | null;
+  region_label: string | null;
+  attended_count: number;
+  is_staff: boolean;
+  history: { id: number; title: string; date: string }[];
+}
+
+export interface TeamMember {
+  id: number;
+  fullname: string;
+  photo: string | null;
+  role: string;
+  role_label: string;
+  balance: number;
+}
+
 export interface Top {
-  top: (Person & { balance: number; me: boolean })[];
+  top: (Person & { balance: number; me: boolean; role?: string })[];
   my_place: number;
   my_balance: number;
 }

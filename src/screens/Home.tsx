@@ -1,8 +1,8 @@
-import type { Bootstrap, EventItem, User } from "../types";
+import type { Bootstrap, EventItem } from "../types";
 import { t, fmt, relDay } from "../i18n";
-import { Avatar, EventCard, Flap, Icon, Empty, Seal, SecHead } from "../ui";
+import { Avatar, EventCard, Flap, Icon, Empty, Name, Seal, SecHead } from "../ui";
 import { openLink, share } from "../tg";
-import { badgesFor, eventStyle, sameRegion, tilt, useCountUp, useCountdown } from "../fx";
+import { badgesFor, eventStyle, isFounder, sameRegion, tilt, useCountUp, useCountdown } from "../fx";
 
 interface Props {
   data: Bootstrap;
@@ -10,8 +10,22 @@ interface Props {
   onGo: (tab: "events" | "qr" | "scan" | "profile") => void;
 }
 
+/** То, что нужно паспорту, — есть и у меня (Bootstrap.user), и у чужого профиля. */
+export interface PassportUser {
+  id: number;
+  fullname: string;
+  photo: string | null;
+  role: string;
+  role_label: string;
+  region_label: string | null;
+  rank: string;
+  balance: number;
+  rank_next_at: number | null;
+  attended_count: number;
+}
+
 /** Машиночитаемая строка, как внизу настоящего паспорта: YQ<UZB<<ISM<<FAMILIYA<<<… */
-export function mrz(user: User) {
+export function mrz(user: PassportUser) {
   const latin = (s: string) => s.toUpperCase().replace(/[^A-Z]+/g, "<");
   const [first = "", ...rest] = user.fullname.trim().split(/\s+/);
   const line1 = `YQ<UZB${latin(rest.join(" ") || first)}<<${latin(first)}`.padEnd(36, "<").slice(0, 36);
@@ -19,15 +33,16 @@ export function mrz(user: User) {
   return [line1, line2];
 }
 
-export function PassportCard({ data, onGo }: { data: Bootstrap; onGo?: () => void }) {
-  const { user } = data;
+export function PassportCard({ user, onGo }: { user: PassportUser; onGo?: () => void }) {
   const points = useCountUp(user.balance);
   const prev = user.rank_next_at === 300 ? 150 : 0;
   const progress = user.rank_next_at ? ((user.balance - prev) / (user.rank_next_at - prev)) * 100 : 100;
   const [l1, l2] = mrz(user);
+  const founder = isFounder(user.role);
 
   return (
-    <section class="passport" onClick={onGo}>
+    <section class={`passport ${founder ? "founder" : ""}`} onClick={onGo}>
+      {founder && <div class="founder-ribbon mono">★ {t("founderLine")} ★</div>}
       <div class="pp-top">
         <Seal size={30} />
         <span class="mono">{t("passport").toUpperCase()}</span>
@@ -37,11 +52,11 @@ export function PassportCard({ data, onGo }: { data: Bootstrap; onGo?: () => voi
         <div class="pp-photo"><Avatar src={user.photo} name={user.fullname} size={78} /></div>
         <div class="pp-id">
           <span class="mono label-xs">{t("fName")}</span>
-          <b class="pp-name">{user.fullname}</b>
+          <b class="pp-name"><Name name={user.fullname} role={user.role} /></b>
           <span class="mono label-xs">{t("role")} · {t("region")}</span>
           <span class="pp-meta">{user.role_label}{user.region_label ? ` · ${user.region_label}` : ""}</span>
         </div>
-        <span class="rank-stamp" style={{ transform: `rotate(${tilt(user.id, 8)})` }}>{user.rank}</span>
+        <span class="rank-stamp" style={{ transform: `rotate(${tilt(user.id, 8)})` }}>{founder ? t("founder") : user.rank}</span>
       </div>
       <div class="pp-points">
         <b class="display">{points}</b>
@@ -76,7 +91,7 @@ export function Home({ data, onOpenEvent, onGo }: Props) {
         <span class="mono small muted">{fmt.dayMonth(new Date().toISOString())}</span>
       </header>
 
-      <PassportCard data={data} onGo={() => onGo("profile")} />
+      <PassportCard user={user} onGo={() => onGo("profile")} />
 
       {user.is_staff && (
         <button class="duty tap" onClick={() => onGo("scan")}>

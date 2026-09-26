@@ -1,6 +1,6 @@
 // API-клиент Mini App. Бэкенд — тот же Django, что у бота (API/webapp.py).
 import { tg } from "./tg";
-import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch } from "./types";
+import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch, PublicUser, TeamMember } from "./types";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE || "https://api.yashilqollar.uz").replace(/\/$/, "");
 
@@ -104,6 +104,8 @@ export const api = {
   },
   qrSvg: () => request<string>("/webapp/qr.svg"),
   top: () => request<Top>("/webapp/top/"),
+  team: () => request<{ team: TeamMember[] }>("/webapp/team/"),
+  user: (id: number) => request<PublicUser>(`/webapp/users/${id}/`),
   staffEvents: () => request<StaffEvents>("/webapp/staff/events/"),
   checkIn: (projectId: number, payload: { qr?: string; user_id?: number }) =>
     post<CheckInResult>("/webapp/staff/checkin/", { project_id: projectId, ...payload }),

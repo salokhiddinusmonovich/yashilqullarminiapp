@@ -70,24 +70,36 @@ export const tilt = (seed: number, max = 7) => `${((seed * 37) % (max * 2 + 1)) 
 
 export interface Badge { id: string; icon: string; name: Key; desc: Key; done: boolean; progress?: [number, number] }
 
-export function badgesFor(d: Bootstrap): Badge[] {
-  const a = d.user.attended_count;
-  const p = d.user.balance;
-  const planned = d.events.some((e) => e.my_status === "approved");
+export interface BadgeInput { attended: number; balance: number; staff: boolean; planned?: boolean }
+
+export function badgesFrom({ attended: a, balance: p, staff, planned }: BadgeInput): Badge[] {
   const mk = (id: string, icon: string, need: number, have: number): Badge => ({
     id, icon, name: `b_${id}` as Key, desc: `b_${id}_d` as Key, done: have >= need, progress: [Math.min(have, need), need],
   });
-  return [
+  const list: Badge[] = [
     mk("first", "🌱", 1, a),
     mk("five", "🔥", 5, a),
     mk("ten", "🌳", 10, a),
     mk("legend", "🏆", 25, a),
     mk("tree", "🍃", 150, p),
     mk("guard", "🛡", 300, p),
-    { id: "plan", icon: "📅", name: "b_plan", desc: "b_plan_d", done: planned },
-    { id: "team", icon: "🧭", name: "b_team", desc: "b_team_d", done: d.user.is_staff },
   ];
+  // «Планировщик» знаем только про себя (чужие записи не показываем)
+  if (planned !== undefined) list.push({ id: "plan", icon: "📅", name: "b_plan", desc: "b_plan_d", done: planned });
+  list.push({ id: "team", icon: "🧭", name: "b_team", desc: "b_team_d", done: staff });
+  return list;
 }
+
+export function badgesFor(d: Bootstrap): Badge[] {
+  return badgesFrom({
+    attended: d.user.attended_count,
+    balance: d.user.balance,
+    staff: d.user.is_staff,
+    planned: d.events.some((e) => e.my_status === "approved"),
+  });
+}
+
+export const isFounder = (role?: string | null) => role === "Founder";
 
 /** Ташкент-город и область — один регион (как на сервере, services.region_group). */
 export function sameRegion(userRegion: string | null, eventRegion: string) {
