@@ -70,9 +70,9 @@ export const tilt = (seed: number, max = 7) => `${((seed * 37) % (max * 2 + 1)) 
 
 export interface Badge { id: string; icon: string; name: Key; desc: Key; done: boolean; progress?: [number, number] }
 
-export interface BadgeInput { attended: number; balance: number; staff: boolean; planned?: boolean }
+export interface BadgeInput { attended: number; balance: number; staff: boolean; planned?: boolean; streak?: number }
 
-export function badgesFrom({ attended: a, balance: p, staff, planned }: BadgeInput): Badge[] {
+export function badgesFrom({ attended: a, balance: p, staff, planned, streak }: BadgeInput): Badge[] {
   const mk = (id: string, icon: string, need: number, have: number): Badge => ({
     id, icon, name: `b_${id}` as Key, desc: `b_${id}_d` as Key, done: have >= need, progress: [Math.min(have, need), need],
   });
@@ -84,6 +84,8 @@ export function badgesFrom({ attended: a, balance: p, staff, planned }: BadgeInp
     mk("tree", "🍃", 150, p),
     mk("guard", "🛡", 300, p),
   ];
+  // серии знаем только про себя (история посещений — своя)
+  if (streak !== undefined) list.push(mk("streak3", "⚡", 3, streak), mk("streak6", "💎", 6, streak));
   // «Планировщик» знаем только про себя (чужие записи не показываем)
   if (planned !== undefined) list.push({ id: "plan", icon: "📅", name: "b_plan", desc: "b_plan_d", done: planned });
   list.push({ id: "team", icon: "🧭", name: "b_team", desc: "b_team_d", done: staff });
@@ -96,7 +98,24 @@ export function badgesFor(d: Bootstrap): Badge[] {
     balance: d.user.balance,
     staff: d.user.is_staff,
     planned: d.events.some((e) => e.my_status === "approved"),
+    streak: streakOf(d.history).months,
   });
+}
+
+// ─────────── серии и челлендж месяца (из истории посещений, без сервера) ───────────
+export const CHALLENGE_GOAL = 2;
+const monthIdx = (iso: string) => { const d = new Date(iso); return d.getFullYear() * 12 + d.getMonth(); };
+
+/** months — сколько месяцев подряд есть хотя бы одно посещение (серия не рвётся, пока идёт текущий месяц);
+ *  thisMonth — посещений в этом месяце; atRisk — серия есть, но в этом месяце ещё не были. */
+export function streakOf(history: { date: string }[]) {
+  const now = new Date(); const cur = now.getFullYear() * 12 + now.getMonth();
+  const months = new Set(history.map((h) => monthIdx(h.date)));
+  const thisMonth = history.filter((h) => monthIdx(h.date) === cur).length;
+  let start = months.has(cur) ? cur : cur - 1;
+  let n = 0;
+  while (months.has(start - n)) n++;
+  return { months: n, thisMonth, atRisk: n > 0 && !months.has(cur) };
 }
 
 export const isFounder = (role?: string | null) => role === "Founder";

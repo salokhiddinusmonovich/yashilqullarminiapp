@@ -2,11 +2,20 @@
 // и поднять APP_VERSION: у всех один раз откроется окно «Что нового».
 import type { Lang } from "./types";
 
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.2.0";
 
 interface Release { v: string; date: Record<Lang, string>; items: Record<Lang, string[]> }
 
 export const CHANGELOG: Release[] = [
+  {
+    v: "1.2",
+    date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },
+    items: {
+      uz: ["🎓 Sertifikatlarim — barcha sertifikatlaringiz Profilda, tadbirdan keyin botga ham keladi", "🔥 Seriyalar va oy chellenji — har oy tadbirga keling", "🗺 Hududlar reytingi — qaysi hudud eng faol", "👥 Do'stni taklif qiling — birinchi tadbiriga kelsa +5 ball", "⏰ Botda eslatmalar: tadbirdan bir kun va 2 soat oldin", "🤖 Botda yordamchi: «❓ Qo'llanma» → «🤖 Savol berish»"],
+      ru: ["🎓 Мои сертификаты — все сертификаты в Профиле, после мероприятия приходят и в бот", "🔥 Серии и челлендж месяца — приходите каждый месяц", "🗺 Рейтинг регионов — какой регион самый активный", "👥 Пригласите друга — +5 баллов, когда он придёт на первое мероприятие", "⏰ Напоминания в боте: за день и за 2 часа до мероприятия", "🤖 Помощник в боте: «❓ Инструкция» → «🤖 Задать вопрос»"],
+      en: ["🎓 My certificates — all your certificates in Profile, also sent to the bot after events", "🔥 Streaks and a monthly challenge — come every month", "🗺 Region ranking — which region is the most active", "👥 Invite a friend — +5 points when they attend their first event", "⏰ Bot reminders a day and 2 hours before events", "🤖 Help assistant in the bot: «❓ How it works» → «🤖 Ask a question»"],
+    },
+  },
   {
     v: "1.1",
     date: { uz: "27-sentabr, 2026", ru: "27 сентября 2026", en: "27 September 2026" },

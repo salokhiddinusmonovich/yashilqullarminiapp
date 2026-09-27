@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
-import type { Bootstrap, Lang, TeamMember, Top as TopData } from "../types";
-import { t, LANG_LABELS } from "../i18n";
+import type { Bootstrap, Lang, RegionRow, TeamMember, Top as TopData } from "../types";
+import { t, fmt, LANG_LABELS } from "../i18n";
 import { api } from "../api";
 import { Avatar, Empty, Icon, Name, Seg, SecHead, Stamp } from "../ui";
 import { getThemePref, haptic, openLink, setThemePref, share, type ThemePref } from "../tg";
@@ -63,25 +63,27 @@ export function QR({ data }: { data: Bootstrap }) {
 
 // ─────────────────── Рейтинг и команда ───────────────────
 
-type TopTab = "rating" | "team";
+type TopTab = "rating" | "team" | "regions";
 
 export function Top({ onOpenProfile }: { onOpenProfile: (id: number) => void }) {
   const [tab, setTab] = useState<TopTab>("rating");
   const [d, setD] = useState<TopData | null>(null);
   const [team, setTeam] = useState<TeamMember[] | null>(null);
+  const [regs, setRegs] = useState<{ regions: RegionRow[]; mine: string | null } | null>(null);
 
   useEffect(() => { api.top().then(setD).catch(() => {}); }, []);
   useEffect(() => {
     if (tab === "team" && !team) api.team().then((r) => setTeam(r.team)).catch(() => setTeam([]));
+    if (tab === "regions" && !regs) api.regions().then(setRegs).catch(() => setRegs({ regions: [], mine: null }));
   }, [tab]);
 
   const open = (id: number) => { haptic("light"); onOpenProfile(id); };
 
   return (
     <div class="screen">
-      <h1 class="title">{tab === "rating" ? t("topTitle") : t("tabTeam")}</h1>
+      <h1 class="title">{tab === "rating" ? t("topTitle") : tab === "team" ? t("tabTeam") : t("tabRegions")}</h1>
       <Seg<TopTab> value={tab} onChange={(v) => { haptic("light"); setTab(v); }}
-        options={[["rating", t("tabRating")], ["team", t("tabTeam")]]} />
+        options={[["rating", t("tabRating")], ["regions", t("tabRegions")], ["team", t("tabTeam")]]} />
       <div class="gap-y" />
 
       {tab === "rating" && (!d ? <div class="skel-list" /> : (
@@ -110,6 +112,28 @@ export function Top({ onOpenProfile }: { onOpenProfile: (id: number) => void }) 
             <span class="mono label-xs">{t("myPlace").toUpperCase()}</span>
             <b class="display">#{d.my_place}</b>
             <span class="mono">{d.my_balance} {t("points")}</span>
+          </div>
+        </>
+      ))}
+
+      {tab === "regions" && (!regs ? <div class="skel-list" /> : regs.regions.length === 0 ? <Empty title={t("notFound")} /> : (
+        <>
+          <p class="muted small team-hint">{t("regHint")}</p>
+          <div class="regions">
+            {regs.regions.map((r, i) => {
+              const max = Math.max(1, regs.regions[0].month);
+              return (
+                <div key={r.key} class={`region-row ${r.key === regs.mine ? "me" : ""} ${i < 3 ? "top" + (i + 1) : ""}`}>
+                  <span class="board-place mono">{i < 3 ? ["🥇", "🥈", "🥉"][i] : String(i + 1).padStart(2, "0")}</span>
+                  <div class="region-main">
+                    <b>{r.label}{r.key === regs.mine && <span class="region-mine mono">{t("regMine")}</span>}</b>
+                    <div class="bar"><i style={{ width: `${Math.round((r.month / max) * 100)}%` }} /></div>
+                    <small class="muted">{r.total} {t("regTotal")} · {r.volunteers} {t("regVols")}</small>
+                  </div>
+                  <div class="region-num"><b class="mono">{r.month}</b><small class="muted">{t("regMonth")}</small></div>
+                </div>
+              );
+            })}
           </div>
         </>
       ))}
@@ -164,6 +188,8 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
       ) : (
         <Empty title={t("stampsEmpty")} />
       )}
+
+      <Certificates history={history} />
 
       <SecHead n="02" title={t("badges")} action={<span class="mono small muted">{badges.filter((b) => b.done).length}/{badges.length}</span>} />
       <div class="patches">
@@ -241,8 +267,18 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
         options={(Object.keys(LANG_LABELS) as Lang[]).map((l) => [l, LANG_LABELS[l]])}
       />
 
+      {data.referral && (
+        <div class="refbox">
+          <span class="refbox-ico">👥</span>
+          <div>
+            <b>{t("refTitle")}</b>
+            <small>{t("refStats", { invited: data.referral.invited, joined: data.referral.joined, earned: data.referral.joined * data.referral.bonus })}</small>
+            <small class="muted">{t("refHint", { bonus: data.referral.bonus })}</small>
+          </div>
+        </div>
+      )}
       <div class="row gap wide">
-        <button class="btn btn-line grow-btn tap" onClick={() => share(`https://t.me/${data.bot_username}`, t("inviteMsg"))}>
+        <button class="btn btn-line grow-btn tap" onClick={() => share(data.referral?.link ?? `https://t.me/${data.bot_username}`, t("inviteMsg"))}>
           <Icon.plane />{t("inviteBtn")}
         </button>
         <button class="btn btn-line grow-btn tap" onClick={() => openLink(`https://t.me/${data.bot_username}`)}>
@@ -260,5 +296,42 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
       <EditProfile key={String(editing)} data={data} open={editing} onClose={() => setEditing(false)} onSaved={onData} />
       <PasswordSheet data={data} open={pwOpen} onClose={() => setPwOpen(false)} onSaved={onData} />
     </div>
+  );
+}
+
+/** 🎓 Мои сертификаты: миниатюры, «Открыть» (PDF) и «Прислать в бот». */
+function Certificates({ history }: { history: Bootstrap["history"] }) {
+  const items = history.filter((h) => h.cert);
+  const [sent, setSent] = useState<Record<number, boolean>>({});
+  async function send(pid: number) {
+    haptic("light");
+    try { await api.certSend(pid); setSent((x) => ({ ...x, [pid]: true })); haptic("success"); } catch { haptic("error"); }
+  }
+  return (
+    <>
+      <SecHead n="🎓" title={t("certs")} action={<span class="mono small muted">{items.length}</span>} />
+      {items.length === 0 ? <Empty title={t("certNone")} /> : (
+        <>
+          <div class="certs">
+            {items.map((h) => (
+              <div class="cert-card" key={h.cert!.pid}>
+                <button class="cert-thumb tap" onClick={() => openLink(h.cert!.pdf)}>
+                  <img src={h.cert!.jpg} alt="" loading="lazy" />
+                </button>
+                <b class="cert-title">{h.title}</b>
+                <small class="mono muted">{fmt.dayMonthLong(h.date)} · № {h.cert!.number}</small>
+                <div class="cert-actions">
+                  <button class="btn btn-line btn-small tap" onClick={() => openLink(h.cert!.pdf)}>{t("certOpen")}</button>
+                  <button class="btn btn-small tap" disabled={sent[h.cert!.pid]} onClick={() => send(h.cert!.pid)}>
+                    {sent[h.cert!.pid] ? t("certSent") : t("certSend")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p class="muted small cert-hint">{t("certHint")}</p>
+        </>
+      )}
+    </>
   );
 }

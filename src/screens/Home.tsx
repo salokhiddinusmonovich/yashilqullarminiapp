@@ -3,7 +3,7 @@ import { t, fmt, relDay } from "../i18n";
 import { ShopTeaser } from "./Shop";
 import { Avatar, EventCard, Flap, Icon, Empty, Name, Seal, SecHead } from "../ui";
 import { openLink, share } from "../tg";
-import { badgesFor, eventStyle, isFounder, sameRegion, tilt, useCountUp, useCountdown } from "../fx";
+import { CHALLENGE_GOAL, badgesFor, eventStyle, isFounder, sameRegion, streakOf, tilt, useCountUp, useCountdown } from "../fx";
 
 interface Props {
   data: Bootstrap;
@@ -95,6 +95,8 @@ export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
 
       <PassportCard user={user} onGo={() => onGo("profile")} />
 
+      <StreakCard history={data.history} />
+
       {user.is_staff && (
         <button class="duty tap" onClick={() => onGo("scan")}>
           <span class="duty-ico"><Icon.scan /></span>
@@ -159,7 +161,8 @@ export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
         <span class="mono label-xs">POSTCARD · OTKRITKA</span>
         <b class="postcard-title">{t("invite")}</b>
         <span class="muted">{t("inviteText")}</span>
-        <button class="btn btn-ink tap" onClick={() => share(`https://t.me/${data.bot_username}`, t("inviteMsg"))}>
+        {data.referral && <span class="small postcard-ref">{t("refHint", { bonus: data.referral.bonus })}</span>}
+        <button class="btn btn-ink tap" onClick={() => share(data.referral?.link ?? `https://t.me/${data.bot_username}`, t("inviteMsg"))}>
           <Icon.plane />{t("inviteBtn")}
         </button>
       </div>
@@ -218,6 +221,27 @@ function Ledger({ n, label }: { n: number; label: string }) {
       <b class="display">{v.toLocaleString("ru-RU")}</b>
       <span class="ledger-dots" />
       <span class="ledger-label">{label}</span>
+    </div>
+  );
+}
+
+/** 🔥 Серия по месяцам + челлендж месяца (2 мероприятия). Считается из истории посещений. */
+function StreakCard({ history }: { history: { date: string }[] }) {
+  const s = streakOf(history);
+  const done = s.thisMonth >= CHALLENGE_GOAL;
+  const pct = Math.min(100, Math.round((s.thisMonth / CHALLENGE_GOAL) * 100));
+  return (
+    <div class={`streak ${s.atRisk ? "risk" : ""}`}>
+      <div class="streak-fire" aria-hidden="true">{s.months > 0 ? "🔥" : "🌱"}</div>
+      <div class="streak-main">
+        <b>{s.months > 0 ? t("streakTitle", { n: s.months }) : t("streakStart")}</b>
+        <small>{s.months === 0 ? t("challengeText", { goal: CHALLENGE_GOAL }) : s.atRisk ? t("streakRisk") : t("streakOk")}</small>
+      </div>
+      <div class="streak-ch">
+        <span class="mono label-xs">{t("challengeTitle")}</span>
+        <b class="mono">{done ? t("challengeDone") : `${s.thisMonth}/${CHALLENGE_GOAL}`}</b>
+        <div class="bar"><i style={{ width: `${pct}%` }} /></div>
+      </div>
     </div>
   );
 }

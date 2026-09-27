@@ -54,8 +54,9 @@ export interface Community {
 export interface Bootstrap {
   user: User;
   events: EventItem[];
-  history: { id: number; title: string; date: string }[];
+  history: { id: number; title: string; date: string; cert?: { pid: number; number: string; pdf: string; jpg: string } }[];
   bot_username: string;
+  referral?: { link: string; invited: number; joined: number; bonus: number } | null;
   community?: Community;
   regions: [string, string][];
 }
@@ -83,7 +84,7 @@ export interface PublicUser {
   region_label: string | null;
   attended_count: number;
   is_staff: boolean;
-  history: { id: number; title: string; date: string }[];
+  history: { id: number; title: string; date: string; cert?: { pid: number; number: string; pdf: string; jpg: string } }[];
 }
 
 export interface TeamMember {
@@ -117,3 +118,5 @@ export interface CheckInResult {
 }
 
 export interface ShopState { counts: Record<string, number>; mine: string[] }
+
+export interface RegionRow { key: string; label: string; month: number; total: number; volunteers: number }
