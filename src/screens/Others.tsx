@@ -190,6 +190,13 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
       )}
 
       <Certificates history={history} />
+      {data.cv_url && (
+        <button class="cvbtn tap" onClick={() => openLink(data.cv_url!)}>
+          <span class="cvbtn-ico">📄</span>
+          <span class="cvbtn-text"><b>{t("cvBtn")}</b><small>{t("cvHint")}</small></span>
+          <Icon.chevron />
+        </button>
+      )}
 
       <SecHead n="02" title={t("badges")} action={<span class="mono small muted">{badges.filter((b) => b.done).length}/{badges.length}</span>} />
       <div class="patches">

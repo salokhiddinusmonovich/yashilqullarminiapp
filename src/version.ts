@@ -2,11 +2,20 @@
 // и поднять APP_VERSION: у всех один раз откроется окно «Что нового».
 import type { Lang } from "./types";
 
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION = "1.3.0";
 
 interface Release { v: string; date: Record<Lang, string>; items: Record<Lang, string[]> }
 
 export const CHANGELOG: Release[] = [
+  {
+    v: "1.3",
+    date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },
+    items: {
+      uz: ["📄 Volontyorlik CV (PDF) — barcha tadbirlaringiz bitta hujjatda", "⏳ Navbat — joy qolmasa, navbatga yoziling: joy bo'shasa avtomatik yozamiz", "🎓 Sertifikatlar endi fasl dizaynida (kuz, qish, bahor, yoz)", "📅 Har dushanba — hududingiz tadbirlari botga keladi"],
+      ru: ["📄 Волонтёрское CV (PDF) — все мероприятия одним документом", "⏳ Очередь — нет мест? Встаньте в очередь: освободится — запишем автоматически", "🎓 Сертификаты теперь в сезонном дизайне (осень, зима, весна, лето)", "📅 По понедельникам — мероприятия вашего региона приходят в бот"],
+      en: ["📄 Volunteer CV (PDF) — all your events in one document", "⏳ Waitlist — event full? Join the queue and we'll sign you up automatically", "🎓 Certificates now use seasonal designs (autumn, winter, spring, summer)", "📅 Every Monday — your region's events arrive in the bot"],
+    },
+  },
   {
     v: "1.2",
     date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },

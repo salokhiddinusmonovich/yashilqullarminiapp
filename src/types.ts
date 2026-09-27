@@ -42,6 +42,8 @@ export interface EventItem {
   max: number;
   my_status: "approved" | "attended" | "pending" | null;
   chat_link: string | null;
+  waitlist?: number;          // ⏳ сколько в очереди
+  my_wait?: number | null;    // моё место в очереди
 }
 
 export interface Community {
@@ -56,6 +58,7 @@ export interface Bootstrap {
   events: EventItem[];
   history: { id: number; title: string; date: string; cert?: { pid: number; number: string; pdf: string; jpg: string } }[];
   bot_username: string;
+  cv_url?: string;
   referral?: { link: string; invited: number; joined: number; bonus: number } | null;
   community?: Community;
   regions: [string, string][];

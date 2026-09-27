@@ -93,6 +93,8 @@ const uz = {
   b_streak3: "Barqaror", b_streak3_d: "3 oy ketma-ket", b_streak6: "Olmos", b_streak6_d: "6 oy ketma-ket",
   refTitle: "Do'stlaringiz", refStats: "Taklif qilganlar: {invited} · kelganlar: {joined} · +{earned} ball", refHint: "Do'stingiz havolangiz orqali kelib, birinchi tadbirga qatnashsa — sizga +{bonus} ball",
   certs: "Sertifikatlarim", certOpen: "📄 Ochish", certSend: "📩 Botga", certSent: "✓ Yuborildi", certNone: "Tadbirga kelib, QR-kodingizni skaner qildiring — sertifikat shu yerda paydo bo'ladi",
+  waitJoin: "⏳ Navbatga yozilish", waitYou: "⏳ Navbatdasiz: №{pos}", waitLeave: "Navbatdan chiqish", waitCount: "navbatda {n} kishi", waitHint: "Kimdir kela olmasa, joy avtomatik sizga o'tadi va bot xabar beradi.",
+  cvBtn: "📄 Volontyorlik CV (PDF)", cvHint: "Barcha tadbirlaringiz bitta hujjatda — universitet, ish, grant uchun",
   close: "Yopish",
 };
 
@@ -190,6 +192,8 @@ const ru: Dict = {
   b_streak3: "Стабильный", b_streak3_d: "3 месяца подряд", b_streak6: "Алмаз", b_streak6_d: "6 месяцев подряд",
   refTitle: "Ваши друзья", refStats: "Приглашено: {invited} · пришли: {joined} · +{earned} баллов", refHint: "Друг пришёл по вашей ссылке и посетил первое мероприятие — вам +{bonus} баллов",
   certs: "Мои сертификаты", certOpen: "📄 Открыть", certSend: "📩 В бот", certSent: "✓ Отправлено", certNone: "Приходите на мероприятие и отсканируйте QR — сертификат появится здесь",
+  waitJoin: "⏳ Встать в очередь", waitYou: "⏳ Вы в очереди: №{pos}", waitLeave: "Выйти из очереди", waitCount: "в очереди {n}", waitHint: "Если кто-то не сможет прийти, место автоматически перейдёт вам — бот сообщит.",
+  cvBtn: "📄 Волонтёрское CV (PDF)", cvHint: "Все мероприятия одним документом — для вуза, работы, гранта",
   close: "Закрыть",
 };
 
@@ -285,6 +289,8 @@ const en: Dict = {
   b_streak3: "Steady", b_streak3_d: "3 months in a row", b_streak6: "Diamond", b_streak6_d: "6 months in a row",
   refTitle: "Your friends", refStats: "Invited: {invited} · came: {joined} · +{earned} points", refHint: "When a friend joins via your link and attends a first event — +{bonus} points for you",
   certs: "My certificates", certOpen: "📄 Open", certSend: "📩 To bot", certSent: "✓ Sent", certNone: "Come to an event and get your QR scanned — the certificate appears here",
+  waitJoin: "⏳ Join the waitlist", waitYou: "⏳ You're on the waitlist: #{pos}", waitLeave: "Leave the waitlist", waitCount: "{n} waiting", waitHint: "If someone can't come, the spot goes to you automatically — the bot will tell you.",
+  cvBtn: "📄 Volunteer CV (PDF)", cvHint: "All your events in one document — for university, jobs, grants",
   close: "Close",
 };
 

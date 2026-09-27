@@ -678,3 +678,11 @@ h1, h2 { margin: 0; }
 .cert-hint { margin: 8px 2px 0; }
 .cert-actions .btn { white-space: nowrap; }
 .cert-actions .btn-line { background: transparent; color: var(--ink); border: 1.5px solid var(--line-strong); box-shadow: none; }
+
+/* 📄 Volontyor CV */
+.cvbtn { width: 100%; margin-top: 12px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; text-align: left; color: var(--ink);
+  border: 1.5px solid color-mix(in srgb, var(--leaf) 55%, transparent); background: color-mix(in srgb, var(--leaf) 10%, var(--paper)); }
+.cvbtn-ico { font-size: 26px; }
+.cvbtn-text { display: grid; gap: 2px; flex: 1; }
+.cvbtn-text small { color: var(--muted); font-size: 12px; }
+.cvbtn > svg { width: 18px; height: 18px; color: var(--muted); }

@@ -97,6 +97,8 @@ export const api = {
     post<{ result: "ok" | "already" | "gone" | "full" | "region" | "subscribe"; event?: EventItem; channel?: string }>(
       `/webapp/events/${id}/join/`, {},
     ),
+  wait: (id: number, leave = false) =>
+    post<{ result: "waiting" | "left" | "gone" | "region" | "already"; event?: EventItem }>(`/webapp/events/${id}/wait/`, leave ? { leave: true } : {}),
   async setLang(lang: string) {
     const data = await post<Bootstrap>("/webapp/lang/", { lang });
     remember(data);

@@ -65,6 +65,8 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
 }) {
   const [state, setState] = useState<JoinState>("idle");
   const [channel, setChannel] = useState("yashilqollar");
+  const [waitPos, setWaitPos] = useState<number | null>(e?.my_wait ?? null);
+  const [waitBusy, setWaitBusy] = useState(false);
 
   if (!e) return <Sheet open={false} onClose={onClose}>{null}</Sheet>;
   const s = seatsInfo(e);
@@ -89,6 +91,21 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
       haptic("error");
       setState("idle");
     }
+  }
+
+  async function toggleWait() {
+    if (!e) return;
+    setWaitBusy(true);
+    haptic("light");
+    try {
+      const r = await api.wait(e.id, !!waitPos);
+      if (r.event) { setWaitPos(r.event.my_wait ?? null); onJoined(r.event); }
+      if (r.result === "waiting") haptic("success");
+      if (r.result === "region") setState("region");
+    } catch {
+      haptic("error");
+    }
+    setWaitBusy(false);
   }
 
   const close = () => { setState("idle"); onClose(); };
@@ -139,7 +156,12 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
         )}
         {foreign && <div class="notice warn"><b>{t("otherRegion")}</b><div>{t("otherRegionHint", { region: e.region_label })}</div></div>}
         {state === "gone" && <div class="notice warn">{t("gone")}</div>}
-        {state === "full" && <div class="notice warn">{t("fullErr")}</div>}
+        {(state === "full" || s.full) && !joined && !foreign && (
+          <div class="notice warn">
+            <b>{waitPos ? t("waitYou", { pos: waitPos }) : t("fullErr")}</b>
+            <div>{t("waitHint")}{e.waitlist ? ` · ${t("waitCount", { n: e.waitlist })}` : ""}</div>
+          </div>
+        )}
 
         {joined && <div class="muted small cert">{t("certHint")}</div>}
       </div>
@@ -152,6 +174,11 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
               <button class="btn btn-ghost tap" onClick={() => openLink(e.chat_link!)}><Icon.send />{t("joinGroup")}</button>
             )}
           </>
+        ) : (s.full || state === "full") && !foreign ? (
+          <button class={`btn ${waitPos ? "btn-ghost" : "btn-primary"} tap`} disabled={waitBusy} onClick={toggleWait}>
+            {waitBusy ? <span class="spin" /> : <Icon.clock />}
+            {waitPos ? t("waitLeave") : t("waitJoin")}
+          </button>
         ) : (
           <button class="btn btn-primary tap" disabled={foreign || s.full || state === "loading"} onClick={join}>
             {state === "loading" ? <span class="spin" /> : foreign ? <Icon.pin /> : <Icon.check />}
