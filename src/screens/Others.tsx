@@ -161,8 +161,8 @@ export function Top({ onOpenProfile }: { onOpenProfile: (id: number) => void }) 
 
 // ─────────────────── Профиль — паспорт ───────────────────
 
-export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
-  data: Bootstrap; onLang: (l: Lang) => void; onData: (d: Bootstrap) => void; onShop: () => void; onWhatsNew: () => void;
+export function Profile({ data, onLang, onData, onShop, onWhatsNew, onImpact }: {
+  data: Bootstrap; onLang: (l: Lang) => void; onData: (d: Bootstrap) => void; onShop: () => void; onWhatsNew: () => void; onImpact?: (id: number) => void;
 }) {
   const { user, history } = data;
   const [theme, setTheme] = useState<ThemePref>(getThemePref());
@@ -183,7 +183,11 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
       <SecHead n="01" title={t("stamps")} action={<span class="mono small muted">{history.length}</span>} />
       {history.length ? (
         <div class="stamps">
-          {history.map((h, i) => <Stamp key={h.id} title={h.title} date={h.date} seed={h.id + i} />)}
+          {history.map((h, i) => h.has_impact && onImpact ? (
+            <button key={h.id} class="stamp-btn tap" onClick={() => onImpact(h.id)} aria-label={t("impOpen")}>
+              <Stamp title={h.title} date={h.date} seed={h.id + i} /><span class="stamp-imp mono">📊 {t("impOpen")}</span>
+            </button>
+          ) : <Stamp key={h.id} title={h.title} date={h.date} seed={h.id + i} />)}
         </div>
       ) : (
         <Empty title={t("stampsEmpty")} />

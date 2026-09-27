@@ -51,13 +51,56 @@ export interface Community {
   events: number;
   checkins: number;
   regions: number;
+  kg?: number;        // 📊 итоги мероприятий (вводят координаторы)
+  bags?: number;
+  trees?: number;
+  photos?: number;
+}
+
+export type SpotStatus = "new" | "accepted" | "planned" | "cleaned" | "rejected" | "duplicate";
+
+/** 📍 Точка эко-карты (сообщение «Iflos joy»). */
+export interface SpotPoint {
+  id: number; lat: number; lon: number; status: SpotStatus; region: string | null; region_label: string;
+  size: "small" | "medium" | "large"; kind: "household" | "plastic" | "construction" | "mixed";
+  created: number; confirms: number; photo: string | null; mine: boolean;
+}
+
+export interface SpotFull extends SpotPoint {
+  photos: string[]; after: string[]; access: "easy" | "hard" | "unknown"; note: string; address: string;
+  maps: { google: string; yandex: string }; updated: number;
+  event: { id: number; title: string; date: string; active: boolean } | null;
+}
+
+export interface ImpactPhoto { url: string; event: number; title: string; date: string }
+
+/** «Mening hissam» — моя доля в итогах мероприятий, где я был. */
+export interface MyImpact { kg: number; bags: number; trees: number; events: number; photos: ImpactPhoto[] }
+
+export interface ImpactEvent {
+  id: number; title: string; date: string; region_label: string;
+  kg: number; bags: number; trees: number; attended: number; photos: string[];
+  mine: { kg: number; bags: number; trees: number } | null;
+}
+
+export interface WrappedData {
+  year: number; name: string; events: number; titles: string[];
+  first: { title: string; date: string } | null;
+  months: number[]; streak: number; season: "kuz" | "qish" | "bahor" | "yoz" | null;
+  share: { kg: number; bags: number; trees: number; events: number };
+  place: number | null; top_pct: number | null; region_total: number | null; region_label: string | null;
+  community: { volunteers: number; checkins: number; events: number; kg: number; trees: number };
+  image: string; preview: boolean;
 }
 
 export interface Bootstrap {
   user: User;
   events: EventItem[];
-  history: { id: number; title: string; date: string; cert?: { pid: number; number: string; pdf: string; jpg: string } }[];
+  history: { id: number; title: string; date: string; has_impact?: boolean; cert?: { pid: number; number: string; pdf: string; jpg: string } }[];
   bot_username: string;
+  impact?: MyImpact;
+  wrapped?: { year: number; image: string; preview: boolean } | null;
+  spots?: { open: number; cleaned: number; mine: number };
   cv_url?: string;
   referral?: { link: string; invited: number; joined: number; bonus: number } | null;
   community?: Community;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import type { JSX } from "preact";
+import type { ComponentType, JSX } from "preact";
 import type { Bootstrap, EventItem, Lang } from "./types";
 import { api, cachedBootstrap, login } from "./api";
 import { setLang, t } from "./i18n";
@@ -12,6 +12,8 @@ import { Scan } from "./screens/Scan";
 import { ProfileSheet } from "./screens/People";
 import { Shop } from "./screens/Shop";
 import { WhatsNew } from "./screens/WhatsNew";
+import { ImpactSheet } from "./screens/Impact";
+import { Wrapped } from "./screens/Wrapped";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "./version";
 import { DEV_DATA } from "./dev";
 
@@ -32,6 +34,15 @@ export default function App() {
   const [profileId, setProfileId] = useState<number | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [wnOpen, setWnOpen] = useState(false);
+  const [impactId, setImpactId] = useState<number | null>(null);
+  const [wrOpen, setWrOpen] = useState(false);
+  // 🗺 эко-карта грузится отдельным файлом (Leaflet) — только когда её открыли
+  const [MapView, setMapView] = useState<ComponentType<{ bot: string; focus?: number | null; onClose: () => void }> | null>(null);
+  const [mapFocus, setMapFocus] = useState<number | null>(null);
+  function openMap(focus: number | null = null) {
+    setMapFocus(focus);
+    import("./screens/EcoMap").then((m) => setMapView(() => m.EcoMap)).catch(() => {});
+  }
 
   async function load() {
     if (!tg) {
@@ -56,6 +67,15 @@ export default function App() {
       const raw = new URLSearchParams(location.search).get("event") || tg?.initDataUnsafe.start_param?.replace("event_", "");
       const ev = raw ? d.events.find((e) => e.id === Number(raw)) : undefined;
       if (ev) setSheet(ev);
+      // из бота: «📸 Rasmlarni ko'rish» (?impact=42) и «🎁 Hikoyani ochish» (?wrapped=1)
+      const qs = new URLSearchParams(location.search);
+      const sp = tg?.initDataUnsafe.start_param || "";
+      const imp = qs.get("impact") || (sp.startsWith("impact_") ? sp.slice(7) : null);
+      if (imp) setImpactId(Number(imp));
+      if ((qs.get("wrapped") || sp === "wrapped") && d.wrapped) setWrOpen(true);
+      // «🗺 Eko-xaritada ko'rish» из бота: ?spot=12 или ?map=1
+      const spot = qs.get("spot") || (sp.startsWith("spot_") ? sp.slice(5) : null);
+      if (spot || qs.get("map") || sp === "map") openMap(spot ? Number(spot) : null);
     }
   }
 
@@ -110,12 +130,14 @@ export default function App() {
   return (
     <div class="app">
       <main key={tab} class="fade">
-        {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} onShop={() => { haptic("light"); setShopOpen(true); }} />}
+        {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} onShop={() => { haptic("light"); setShopOpen(true); }}
+          onImpact={(id) => { haptic("light"); setImpactId(id); }} onWrapped={() => { haptic("medium"); setWrOpen(true); }}
+          onMap={() => { haptic("light"); openMap(); }} />}
         {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
         {tab === "scan" && staff && <Scan regionLabel={scanRegion} />}
         {tab === "top" && <Top onOpenProfile={setProfileId} />}
-        {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} onShop={() => setShopOpen(true)} onWhatsNew={() => setWnOpen(true)} />}
+        {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} onShop={() => setShopOpen(true)} onWhatsNew={() => setWnOpen(true)} onImpact={setImpactId} />}
       </main>
 
       <nav class="tabbar">
@@ -128,6 +150,9 @@ export default function App() {
       </nav>
 
       <ProfileSheet id={profileId} onClose={() => setProfileId(null)} />
+      <ImpactSheet id={impactId} onClose={() => setImpactId(null)} />
+      {MapView && <MapView bot={data.bot_username} focus={mapFocus} onClose={() => setMapView(null)} />}
+      {wrOpen && <Wrapped onClose={() => setWrOpen(false)} shareLink={data.referral?.link ?? `https://t.me/${data.bot_username}`} />}
       <WhatsNew open={wnOpen} onClose={closeWn} />
       <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} userRegion={data.user.region} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>

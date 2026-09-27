@@ -1,6 +1,6 @@
 // API-клиент Mini App. Бэкенд — тот же Django, что у бота (API/webapp.py).
 import { tg } from "./tg";
-import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch, PublicUser, RegionRow, ShopState, TeamMember } from "./types";
+import type { Bootstrap, CheckInResult, EventItem, ImpactEvent, SpotFull, SpotPoint, StaffEvents, Top, Person, ProfilePatch, PublicUser, RegionRow, ShopState, TeamMember, WrappedData } from "./types";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE || "https://api.yashilqollar.uz").replace(/\/$/, "");
 
@@ -117,5 +117,9 @@ export const api = {
   certSend: (pid: number) => post<{ result: string }>(`/webapp/certificates/${pid}/send/`, {}),
   shop: () => request<ShopState>("/webapp/shop/"),
   wish: (item: string) => post<ShopState>("/webapp/shop/", { item }),
+  impact: (id: number) => (import.meta.env.DEV && !tg ? import("./dev").then((m) => m.DEV_IMPACT) : request<ImpactEvent>(`/webapp/impact/${id}/`)),
+  wrapped: () => (import.meta.env.DEV && !tg ? import("./dev").then((m) => m.DEV_WRAPPED) : request<WrappedData>("/webapp/wrapped/")),
+  spots: () => (import.meta.env.DEV && !tg ? import("./dev").then((m) => ({ spots: m.DEV_SPOTS })) : request<{ spots: SpotPoint[] }>("/webapp/spots/")),
+  spot: (id: number) => (import.meta.env.DEV && !tg ? import("./dev").then((m) => m.devSpot(id)) : request<SpotFull>(`/webapp/spots/${id}/`)),
   search: (q: string) => request<{ results: Person[] }>(`/webapp/staff/search/?q=${encodeURIComponent(q)}`),
 };

@@ -2,11 +2,29 @@
 // и поднять APP_VERSION: у всех один раз откроется окно «Что нового».
 import type { Lang } from "./types";
 
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.5.0";
 
 interface Release { v: string; date: Record<Lang, string>; items: Record<Lang, string[]> }
 
 export const CHANGELOG: Release[] = [
+  {
+    v: "1.5",
+    date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },
+    items: {
+      uz: ["🗺 Eko-xarita — volontyorlar xabar bergan iflos joylar va qaysilari tozalandi", "📍 Iflos joy haqida xabar bering: rasm + joylashuv → qabul qilinsa +5 ball, tozalansa +10", "🧹 «Oldin / keyin» — siz xabar bergan joy tozalanganda"],
+      ru: ["🗺 Эко-карта — грязные места, о которых сообщили волонтёры, и какие уже убраны", "📍 Сообщите о грязном месте: фото + геолокация → примем — +5 баллов, уберём — +10", "🧹 «До / после» — когда место, о котором вы сообщили, убрано"],
+      en: ["🗺 Eco-map — dirty spots reported by volunteers and which ones are cleaned", "📍 Report a dirty spot: photo + location → accepted +5 points, cleaned +10", "🧹 «Before / after» — when a spot you reported is cleaned"],
+    },
+  },
+  {
+    v: "1.4",
+    date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },
+    items: {
+      uz: ["🌍 Mening hissam — nechta kg chiqindi yig'dingiz va nechta ko'chat ekdingiz", "📸 Tadbirlardan rasmlar — koordinatorlar yuklaydi, Profildagi muhrni bosing", "🎁 Dekabrda — «Yashil Qo'llar Wrapped»: yilingiz hikoya ko'rinishida, stories uchun rasm bilan"],
+      ru: ["🌍 Мой вклад — сколько кг мусора вы собрали и сколько деревьев посадили", "📸 Фото с мероприятий — загружают координаторы, нажмите на печать в Профиле", "🎁 В декабре — «Yashil Qo'llar Wrapped»: ваш год в формате историй, с картинкой для сторис"],
+      en: ["🌍 My impact — how many kg of litter you collected and trees you planted", "📸 Event photos — uploaded by coordinators, tap a stamp in Profile", "🎁 In December — «Yashil Qo'llar Wrapped»: your year as a story, with a picture for stories"],
+    },
+  },
   {
     v: "1.3",
     date: { uz: "28-sentabr, 2026", ru: "28 сентября 2026", en: "28 September 2026" },

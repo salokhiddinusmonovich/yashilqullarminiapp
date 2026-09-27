@@ -1,6 +1,9 @@
 import type { Bootstrap, EventItem } from "../types";
 import { t, fmt, relDay } from "../i18n";
 import { ShopTeaser } from "./Shop";
+import { ImpactCard } from "./Impact";
+import { WrappedBanner } from "./Wrapped";
+import { EcoMapCard } from "./EcoMapCard";
 import { Avatar, EventCard, Flap, Icon, Empty, Name, Seal, SecHead } from "../ui";
 import { openLink, share } from "../tg";
 import { CHALLENGE_GOAL, badgesFor, eventStyle, isFounder, sameRegion, streakOf, tilt, useCountUp, useCountdown } from "../fx";
@@ -10,6 +13,9 @@ interface Props {
   onOpenEvent: (e: EventItem) => void;
   onGo: (tab: "events" | "qr" | "scan" | "profile") => void;
   onShop: () => void;
+  onImpact: (eventId: number) => void;
+  onWrapped: () => void;
+  onMap: () => void;
 }
 
 /** То, что нужно паспорту, — есть и у меня (Bootstrap.user), и у чужого профиля. */
@@ -77,7 +83,7 @@ export function PassportCard({ user, onGo }: { user: PassportUser; onGo?: () => 
   );
 }
 
-export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
+export function Home({ data, onOpenEvent, onGo, onShop, onImpact, onWrapped, onMap }: Props) {
   const { user, events, community } = data;
   const now = Date.now() - 6 * 3600e3;
   const next = events.find((e) => e.my_status && new Date(e.date).getTime() >= now);
@@ -92,6 +98,8 @@ export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
         <span class="muted">{t("hello")}, <b class="hello-name">{first}</b></span>
         <span class="mono small muted">{fmt.dayMonth(new Date().toISOString())}</span>
       </header>
+
+      {data.wrapped && <WrappedBanner year={data.wrapped.year} preview={data.wrapped.preview} onOpen={onWrapped} />}
 
       <PassportCard user={user} onGo={() => onGo("profile")} />
 
@@ -128,6 +136,10 @@ export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
         !next && <Empty title={t("noEvents")} text={t("noEventsHint")} />
       )}
 
+      {data.impact && (user.attended_count > 0 || data.impact.photos.length > 0) && <ImpactCard impact={data.impact} onOpen={onImpact} />}
+
+      {data.spots && <EcoMapCard spots={data.spots} onOpen={onMap} />}
+
       <ShopTeaser balance={user.balance} onOpen={onShop} />
 
       <SecHead
@@ -152,6 +164,8 @@ export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
             <Ledger n={community.events} label={t("cEvents")} />
             <Ledger n={community.checkins} label={t("cCheck")} />
             <Ledger n={community.regions} label={t("cRegions")} />
+            {!!community.kg && <Ledger n={Math.round(community.kg)} label={t("cKg")} />}
+            {!!community.trees && <Ledger n={community.trees} label={t("cTrees")} />}
           </div>
         </>
       )}

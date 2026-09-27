@@ -22,6 +22,8 @@ interface TgWebApp {
   showScanQrPopup(params: { text?: string }, cb?: (text: string) => boolean | void): void;
   requestContact?(cb: (ok: boolean, res?: { responseUnsafe?: { contact?: { phone_number?: string } } }) => void): void;
   closeScanQrPopup(): void;
+  shareToStory?(mediaUrl: string, params?: { text?: string; widget_link?: { url: string; name?: string } }): void;
+  downloadFile?(params: { url: string; file_name: string }, cb?: (ok: boolean) => void): void;
   onEvent(event: string, cb: (...args: unknown[]) => void): void;
   offEvent(event: string, cb: (...args: unknown[]) => void): void;
   HapticFeedback: {
@@ -101,6 +103,25 @@ export function useBackButton(active: boolean, onBack: () => void) {
     tg.BackButton.offClick(onBack);
     tg.BackButton.hide();
   };
+}
+
+/** Сторис в Telegram (Bot API 7.8+). false — клиент не умеет. */
+export function shareStory(mediaUrl: string, text: string): boolean {
+  if (!tg?.shareToStory || !tg.isVersionAtLeast("7.8")) return false;
+  try {
+    tg.shareToStory(mediaUrl, { text });
+    return true;
+  } catch { return false; }
+}
+
+export const canStory = () => !!tg?.shareToStory && tg.isVersionAtLeast("7.8");
+
+/** Сохранить файл на телефон (Bot API 8.0+), иначе — открыть ссылку (долгое нажатие → сохранить). */
+export function saveFile(url: string, name: string) {
+  if (tg?.downloadFile && tg.isVersionAtLeast("8.0")) {
+    try { tg.downloadFile({ url, file_name: name }); return; } catch { /* */ }
+  }
+  openLink(url);
 }
 
 export const canScan = () => !!tg && tg.isVersionAtLeast("6.4");
