@@ -95,6 +95,7 @@ const uz = {
   certs: "Sertifikatlarim", certOpen: "📄 Ochish", certSend: "📩 Botga", certSent: "✓ Yuborildi", certNone: "Tadbirga kelib, QR-kodingizni skaner qildiring — sertifikat shu yerda paydo bo'ladi",
   waitJoin: "⏳ Navbatga yozilish", waitYou: "⏳ Navbatdasiz: №{pos}", waitLeave: "Navbatdan chiqish", waitCount: "navbatda {n} kishi", waitHint: "Kimdir kela olmasa, joy avtomatik sizga o'tadi va bot xabar beradi.",
   cvBtn: "📄 Volontyorlik CV (PDF)", cvHint: "Barcha tadbirlaringiz bitta hujjatda — universitet, ish, grant uchun",
+  s_kuz: "Kuz", s_qish: "Qish", s_bahor: "Bahor", s_yoz: "Yoz",
   close: "Yopish",
 };
 
@@ -194,6 +195,7 @@ const ru: Dict = {
   certs: "Мои сертификаты", certOpen: "📄 Открыть", certSend: "📩 В бот", certSent: "✓ Отправлено", certNone: "Приходите на мероприятие и отсканируйте QR — сертификат появится здесь",
   waitJoin: "⏳ Встать в очередь", waitYou: "⏳ Вы в очереди: №{pos}", waitLeave: "Выйти из очереди", waitCount: "в очереди {n}", waitHint: "Если кто-то не сможет прийти, место автоматически перейдёт вам — бот сообщит.",
   cvBtn: "📄 Волонтёрское CV (PDF)", cvHint: "Все мероприятия одним документом — для вуза, работы, гранта",
+  s_kuz: "Осень", s_qish: "Зима", s_bahor: "Весна", s_yoz: "Лето",
   close: "Закрыть",
 };
 
@@ -291,6 +293,7 @@ const en: Dict = {
   certs: "My certificates", certOpen: "📄 Open", certSend: "📩 To bot", certSent: "✓ Sent", certNone: "Come to an event and get your QR scanned — the certificate appears here",
   waitJoin: "⏳ Join the waitlist", waitYou: "⏳ You're on the waitlist: #{pos}", waitLeave: "Leave the waitlist", waitCount: "{n} waiting", waitHint: "If someone can't come, the spot goes to you automatically — the bot will tell you.",
   cvBtn: "📄 Volunteer CV (PDF)", cvHint: "All your events in one document — for university, jobs, grants",
+  s_kuz: "Autumn", s_qish: "Winter", s_bahor: "Spring", s_yoz: "Summer",
   close: "Close",
 };
 

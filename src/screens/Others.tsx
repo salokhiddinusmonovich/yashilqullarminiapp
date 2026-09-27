@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import type { Bootstrap, Lang, RegionRow, TeamMember, Top as TopData } from "../types";
-import { t, fmt, LANG_LABELS } from "../i18n";
+import { t, fmt, LANG_LABELS, type Key } from "../i18n";
 import { api } from "../api";
 import { Avatar, Empty, Icon, Name, Seg, SecHead, Stamp } from "../ui";
 import { getThemePref, haptic, openLink, setThemePref, share, type ThemePref } from "../tg";
@@ -306,9 +306,24 @@ export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
   );
 }
 
-/** 🎓 Мои сертификаты: миниатюры, «Открыть» (PDF) и «Прислать в бот». */
+/** Сезон по дате: «🍂 Kuz 2025», «❄️ Qish 2025–26» (декабрь — начало зимы следующего года). Как на сервере. */
+function seasonOf(iso: string): { key: number; label: string } {
+  const d = new Date(iso); const m = d.getMonth() + 1; const y = d.getFullYear();
+  const s = m >= 3 && m <= 5 ? "bahor" : m >= 6 && m <= 8 ? "yoz" : m >= 9 && m <= 11 ? "kuz" : "qish";
+  const emoji = { kuz: "🍂", qish: "❄️", bahor: "🌸", yoz: "☀️" }[s];
+  if (s === "qish") { const start = m === 12 ? y : y - 1; return { key: start * 10 + 4, label: `${emoji} ${t("s_qish")} ${start}–${String(start + 1).slice(2)}` }; }
+  return { key: y * 10 + { bahor: 1, yoz: 2, kuz: 3 }[s], label: `${emoji} ${t(`s_${s}` as Key)} ${y}` };
+}
+
+/** 🎓 Мои сертификаты: по сезонам, миниатюры, «Открыть» (PDF) и «Прислать в бот». */
 function Certificates({ history }: { history: Bootstrap["history"] }) {
   const items = history.filter((h) => h.cert);
+  const groups: { key: number; label: string; items: typeof items }[] = [];
+  for (const h of [...items].sort((a, b) => +new Date(b.date) - +new Date(a.date))) {
+    const s = seasonOf(h.date);
+    const g = groups.find((x) => x.key === s.key);
+    if (g) g.items.push(h); else groups.push({ ...s, items: [h] });
+  }
   const [sent, setSent] = useState<Record<number, boolean>>({});
   async function send(pid: number) {
     haptic("light");
@@ -319,8 +334,11 @@ function Certificates({ history }: { history: Bootstrap["history"] }) {
       <SecHead n="🎓" title={t("certs")} action={<span class="mono small muted">{items.length}</span>} />
       {items.length === 0 ? <Empty title={t("certNone")} /> : (
         <>
+          {groups.map((g) => (
+          <div key={g.key}>
+          <div class="season-head"><b>{g.label}</b><span class="mono small muted">{g.items.length}</span></div>
           <div class="certs">
-            {items.map((h) => (
+            {g.items.map((h) => (
               <div class="cert-card" key={h.cert!.pid}>
                 <button class="cert-thumb tap" onClick={() => openLink(h.cert!.pdf)}>
                   <img src={h.cert!.jpg} alt="" loading="lazy" />
@@ -336,6 +354,8 @@ function Certificates({ history }: { history: Bootstrap["history"] }) {
               </div>
             ))}
           </div>
+          </div>
+          ))}
           <p class="muted small cert-hint">{t("certHint")}</p>
         </>
       )}
