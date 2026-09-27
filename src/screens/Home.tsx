@@ -1,5 +1,6 @@
 import type { Bootstrap, EventItem } from "../types";
 import { t, fmt, relDay } from "../i18n";
+import { ShopTeaser } from "./Shop";
 import { Avatar, EventCard, Flap, Icon, Empty, Name, Seal, SecHead } from "../ui";
 import { openLink, share } from "../tg";
 import { badgesFor, eventStyle, isFounder, sameRegion, tilt, useCountUp, useCountdown } from "../fx";
@@ -8,6 +9,7 @@ interface Props {
   data: Bootstrap;
   onOpenEvent: (e: EventItem) => void;
   onGo: (tab: "events" | "qr" | "scan" | "profile") => void;
+  onShop: () => void;
 }
 
 /** То, что нужно паспорту, — есть и у меня (Bootstrap.user), и у чужого профиля. */
@@ -75,7 +77,7 @@ export function PassportCard({ user, onGo }: { user: PassportUser; onGo?: () => 
   );
 }
 
-export function Home({ data, onOpenEvent, onGo }: Props) {
+export function Home({ data, onOpenEvent, onGo, onShop }: Props) {
   const { user, events, community } = data;
   const now = Date.now() - 6 * 3600e3;
   const next = events.find((e) => e.my_status && new Date(e.date).getTime() >= now);
@@ -123,6 +125,8 @@ export function Home({ data, onOpenEvent, onGo }: Props) {
       ) : (
         !next && <Empty title={t("noEvents")} text={t("noEventsHint")} />
       )}
+
+      <ShopTeaser balance={user.balance} onOpen={onShop} />
 
       <SecHead
         n="03"

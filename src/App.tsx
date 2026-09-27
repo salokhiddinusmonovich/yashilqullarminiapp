@@ -10,6 +10,9 @@ import { Events, EventSheet } from "./screens/Events";
 import { Profile, QR, Top } from "./screens/Others";
 import { Scan } from "./screens/Scan";
 import { ProfileSheet } from "./screens/People";
+import { Shop } from "./screens/Shop";
+import { WhatsNew } from "./screens/WhatsNew";
+import { markWhatsNewSeen, shouldShowWhatsNew } from "./version";
 import { DEV_DATA } from "./dev";
 
 type Tab = "home" | "events" | "qr" | "scan" | "top" | "profile";
@@ -27,6 +30,8 @@ export default function App() {
   const [sheet, setSheet] = useState<EventItem | null>(null);
   const [bot, setBot] = useState("yashilqollarbot");
   const [profileId, setProfileId] = useState<number | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [wnOpen, setWnOpen] = useState(false);
 
   async function load() {
     if (!tg) {
@@ -44,6 +49,8 @@ export default function App() {
     setLang(d.user.lang);
     setData(d);
     setStatus("ready");
+    // После обновления приложения — один раз показать «Что нового»
+    if (fresh && shouldShowWhatsNew()) setTimeout(() => setWnOpen(true), 700);
     // Ссылка из бота «открыть мероприятие»: ...?event=42
     if (fresh) {
       const raw = new URLSearchParams(location.search).get("event") || tg?.initDataUnsafe.start_param?.replace("event_", "");
@@ -83,6 +90,13 @@ export default function App() {
   }
 
   const staff = data.user.is_staff;
+  // Сканер: основатель — все регионы, остальные — только свой (сервер проверяет так же)
+  const scanRegion = data.user.role !== "Founder" && data.user.region ? data.user.region_label : null;
+  const closeWn = () => { setWnOpen(false); markWhatsNewSeen(); };
+
+  if (shopOpen) {
+    return <div class="app"><Shop data={data} onClose={() => setShopOpen(false)} /><WhatsNew open={wnOpen} onClose={closeWn} /></div>;
+  }
   const tabs: { id: Tab; label: string; icon: () => JSX.Element; center?: boolean }[] = [
     { id: "home", label: t("tabHome"), icon: Icon.home },
     { id: "events", label: t("tabEvents"), icon: Icon.cal },
@@ -96,12 +110,12 @@ export default function App() {
   return (
     <div class="app">
       <main key={tab} class="fade">
-        {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} />}
+        {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} onShop={() => { haptic("light"); setShopOpen(true); }} />}
         {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
-        {tab === "scan" && staff && <Scan />}
+        {tab === "scan" && staff && <Scan regionLabel={scanRegion} />}
         {tab === "top" && <Top onOpenProfile={setProfileId} />}
-        {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} />}
+        {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} onShop={() => setShopOpen(true)} onWhatsNew={() => setWnOpen(true)} />}
       </main>
 
       <nav class="tabbar">
@@ -114,6 +128,7 @@ export default function App() {
       </nav>
 
       <ProfileSheet id={profileId} onClose={() => setProfileId(null)} />
+      <WhatsNew open={wnOpen} onClose={closeWn} />
       <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} userRegion={data.user.region} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />
     </div>
   );
@@ -122,7 +137,7 @@ export default function App() {
 function Splash() {
   return (
     <div class="splash">
-      <div class="splash-logo"><Icon.leaf /></div>
+      <div class="splash-logo"><img src="/logo.jpg" alt="" /></div>
       <div class="splash-name display">Yashil Qo'llar</div>
       <div class="mono label-xs">{t("passport").toUpperCase()}</div>
     </div>

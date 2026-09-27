@@ -107,8 +107,13 @@ export interface StaffEvents {
 }
 
 export interface CheckInResult {
-  result: "ok" | "already" | "not_found" | "bad_qr" | "no_event";
+  result: "ok" | "already" | "not_found" | "bad_qr" | "no_event" | "other_region" | "confirm_region";
+  person_region?: string;
+  event_region?: string;
+  event_title?: string;
   auto_added?: boolean;
   person?: Person;
   counts?: { registered: number; attended: number };
 }
+
+export interface ShopState { counts: Record<string, number>; mine: string[] }

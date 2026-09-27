@@ -100,8 +100,9 @@ h1, h2 { margin: 0; }
 .list { display: grid; gap: 14px; }
 
 /* ── фирменная печать-лист ── */
-.seal { display: inline-grid; place-items: center; flex: none; border-radius: 50%; color: var(--leaf); border: 1.5px solid currentColor; box-shadow: inset 0 0 0 3px var(--bg), inset 0 0 0 4.5px currentColor; }
-.seal svg { width: 58%; height: 58%; }
+.seal { display: inline-grid; place-items: center; flex: none; border-radius: 50%; overflow: hidden; background: #f3eee2;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--leaf) 60%, transparent); }
+.seal img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); }
 
 /* ── приветствие ── */
 .hello { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 2px 14px; font-size: 15px; }
@@ -479,13 +480,13 @@ h1, h2 { margin: 0; }
 
 /* ── заглушки ── */
 .empty { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 30px 16px; color: var(--muted); }
-.empty .seal { color: var(--muted); }
+.empty .seal { opacity: .85; }
 .empty-title { font-weight: 800; color: var(--ink); }
 .skel-list { height: 300px; border-radius: var(--r); background: linear-gradient(90deg, var(--paper), var(--paper-2), var(--paper)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
 .splash { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; }
 .splash .btn { width: auto; min-width: 220px; margin-top: 8px; }
-.splash-logo { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; color: var(--leaf); border: 2px solid currentColor; box-shadow: inset 0 0 0 5px var(--bg), inset 0 0 0 7px currentColor; animation: breathe 1.6s ease-in-out infinite; }
-.splash-logo svg { width: 46px; height: 46px; }
+.splash-logo { width: 104px; height: 104px; border-radius: 50%; overflow: hidden; background: #f3eee2; box-shadow: 0 0 0 3px var(--leaf), 0 0 40px rgba(108, 196, 138, .35); animation: breathe 1.6s ease-in-out infinite; }
+.splash-logo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); }
 .splash-name { font-size: 20px; font-weight: 800; }
 .msg-title { font: 800 19px var(--f-display); max-width: 300px; }
 .big-emoji { font-size: 44px; line-height: 1; }
@@ -529,3 +530,102 @@ h1, h2 { margin: 0; }
 .member.founder .mono { color: #c9971f; }
 .pod, .board-row { width: 100%; text-align: center; }
 .board-row { text-align: left; }
+
+/* ═══════════ Эко-магазин (бета) — бирки на верёвочке ═══════════ */
+.shop { position: relative; padding: 10px 16px 40px; max-width: 560px; margin: 0 auto; }
+.shop-top { display: flex; align-items: center; gap: 10px; margin: 4px 0 2px; }
+.shop-back { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; border: 1.5px solid var(--line-strong); color: var(--ink); }
+.shop-back svg { width: 18px; height: 18px; transform: rotate(180deg); }
+.shop-head { display: flex; align-items: center; justify-content: space-between; }
+.shop-head .title { margin-bottom: 8px; }
+.shop-stamp { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--clay); padding: 6px 10px; border: 2px solid var(--clay);
+  border-radius: 8px; transform: rotate(-6deg); box-shadow: inset 0 0 0 2px var(--bg), inset 0 0 0 3.5px var(--clay); white-space: nowrap; }
+.shop-lead { margin: 0 2px 16px; line-height: 1.45; }
+.wallet { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-radius: var(--r); background: var(--paper);
+  border: 1.5px solid var(--line); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.wallet::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--leaf) 5%, transparent) 14px 15px); pointer-events: none; }
+.wallet-num { display: flex; align-items: baseline; gap: 8px; margin: 4px 0 2px; }
+.wallet-num b { font: 800 40px/1 var(--f-display); letter-spacing: -.03em; color: var(--leaf); }
+.wallet-num span { font-weight: 700; color: var(--muted); }
+.wallet-coin { flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: var(--leaf);
+  border: 2px dashed color-mix(in srgb, var(--leaf) 60%, transparent); animation: spin 18s linear infinite; }
+.wallet-coin svg { width: 34px; height: 34px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tags { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; padding-top: 8px; }
+.tagcard { --tag-ink: var(--leaf); position: relative; display: grid; gap: 4px; padding: 26px 12px 12px; border-radius: 14px 14px 16px 16px;
+  background: var(--paper); border: 1.5px solid var(--line); box-shadow: var(--shadow);
+  clip-path: polygon(22% 0, 78% 0, 100% 9%, 100% 100%, 0 100%, 0 9%); }
+.tag-hole { position: absolute; left: 50%; top: 9px; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+.tagcard::before { content: ""; position: absolute; left: 50%; top: -14px; width: 1.5px; height: 26px; background: var(--line-strong); }
+.tag-art { position: relative; height: 84px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 4px;
+  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--tag-ink) 32%, transparent), color-mix(in srgb, var(--tag-ink) 10%, transparent) 70%); }
+.tag-art span { font-size: 44px; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .25)); }
+.tag-art i { position: absolute; right: 8px; bottom: 6px; font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .14em; color: var(--tag-ink); opacity: .9; }
+.tag-name { font: 800 14px/1.2 var(--f-display); letter-spacing: -.01em; }
+.tag-desc { font-size: 11.5px; line-height: 1.3; min-height: 2.6em; }
+.tag-price { display: flex; align-items: center; gap: 5px; color: var(--tag-ink); margin-top: 2px; }
+.tag-price svg { width: 16px; height: 16px; }
+.tag-price b { font: 800 20px var(--f-display); letter-spacing: -.02em; }
+.tagcard .bar { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.tagcard .bar i { display: block; height: 100%; border-radius: 99px; background: var(--tag-ink); }
+.tag-left { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.tag-left.ok { color: var(--leaf); font-weight: 700; }
+.tag-left svg { width: 13px; height: 13px; }
+.tag-want { margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 10px;
+  border: 1.5px solid var(--line-strong); font-weight: 700; font-size: 13px; color: var(--ink); }
+.tag-want span { font-size: 15px; color: var(--berry); }
+.tag-want em { font-style: normal; font-size: 11px; color: var(--muted); }
+.tag-want.on { background: color-mix(in srgb, var(--berry) 16%, transparent); border-color: var(--berry); }
+.tag-lock { position: absolute; top: 34px; right: -30px; transform: rotate(35deg); display: flex; align-items: center; gap: 4px; padding: 3px 30px;
+  background: var(--clay); color: #fff; font: 700 9.5px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; }
+.tag-lock svg { width: 11px; height: 11px; }
+
+.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.how-step { display: grid; gap: 4px; padding: 12px 10px; border-radius: 14px; border: 1.5px dashed var(--line-strong); }
+.how-n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--leaf); color: var(--on-accent); font-weight: 700; font-size: 12px; }
+.how-step b { font-size: 13px; line-height: 1.25; }
+.how-step small { font-size: 11px; line-height: 1.3; }
+.shop-note { margin-top: 16px; line-height: 1.45; }
+
+/* анонс на главной */
+.shop-teaser { position: relative; width: 100%; margin-top: 22px; text-align: left; display: grid; gap: 10px; padding: 26px 16px 16px; border-radius: var(--r);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--berry) 22%, var(--paper)), var(--paper) 60%); border: 1.5px solid var(--line); box-shadow: var(--shadow); overflow: hidden; color: var(--ink); }
+.shop-teaser-tape { position: absolute; top: 0; left: 16px; padding: 4px 10px; background: var(--clay); color: #fff; font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; border-radius: 0 0 8px 8px; }
+.shop-teaser-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.shop-teaser-row b { display: block; font: 800 20px var(--f-display); letter-spacing: -.02em; }
+.shop-teaser-items { display: flex; }
+.shop-teaser-items span { width: 44px; height: 44px; margin-left: -10px; border-radius: 50%; display: grid; place-items: center; font-size: 22px;
+  background: var(--paper-2); border: 2px solid var(--paper); box-shadow: 0 4px 10px rgba(0, 0, 0, .2); }
+.shop-teaser-cta { display: flex; align-items: center; gap: 4px; font-weight: 700; color: var(--leaf); }
+.shop-teaser-cta svg { width: 16px; height: 16px; }
+.shop-teaser-bal { position: absolute; right: 16px; bottom: 16px; font-size: 11px; color: var(--muted); }
+.beta-chip { margin-left: 6px; font-size: 9.5px; padding: 2px 7px; border-radius: 99px; background: var(--clay); color: #fff; letter-spacing: .1em; vertical-align: 2px; }
+.duty-ico:not(:has(svg)) { font-size: 22px; background: color-mix(in srgb, var(--berry) 30%, transparent); }
+
+/* версии и «Что нового» */
+.ver { margin-top: 8px; font-size: 11px; letter-spacing: .1em; color: var(--leaf); padding: 6px 12px; border-radius: 99px; border: 1.5px solid color-mix(in srgb, var(--leaf) 40%, transparent); }
+.wn { padding-bottom: 20px; }
+.wn-title { font: 800 26px var(--f-display); letter-spacing: -.02em; margin-top: -4px; }
+.wn-rel { padding: 14px 14px 10px; border-radius: 16px; border: 1.5px dashed var(--line-strong); }
+.wn-rel.cur { border: 1.5px solid var(--leaf); background: color-mix(in srgb, var(--leaf) 8%, transparent); }
+.wn-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.wn-v { font-weight: 700; font-size: 15px; }
+.wn-new { font-size: 9.5px; padding: 3px 8px; border-radius: 99px; background: var(--leaf); color: var(--on-accent); letter-spacing: .12em; text-transform: uppercase; }
+.wn-head small { margin-left: auto; }
+.wn-rel ul { margin: 0; padding-left: 2px; list-style: none; display: grid; gap: 6px; font-size: 14px; line-height: 1.35; }
+
+/* сканер — только свой регион */
+.scan-region { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 10px; padding: 6px 10px; border-radius: 10px;
+  background: color-mix(in srgb, var(--sky) 14%, transparent); color: var(--ink); }
+.result-other_region { border-color: var(--clay); }
+
+/* сканер: какое мероприятие выбрано, подтверждение региона, отмена */
+.scan-now { margin: 12px 0 4px; padding: 12px 14px; border-radius: 16px; border: 2px solid var(--leaf); background: color-mix(in srgb, var(--leaf) 10%, transparent); display: grid; gap: 3px; }
+.scan-now b { font: 800 17px/1.2 var(--f-display); letter-spacing: -.01em; }
+.scan-now small { color: var(--muted); }
+.confirm-region { margin-top: 14px; padding: 14px; border-radius: 16px; border: 2px solid var(--sun); background: color-mix(in srgb, var(--sun) 14%, transparent); display: grid; gap: 10px; line-height: 1.4; }
+.confirm-region b { font-size: 16px; }
+.undo { margin-top: 6px; padding: 5px 10px; border-radius: 99px; border: 1.5px solid var(--line-strong); font-size: 12px; font-weight: 700; color: var(--ink); }
+.result-undone { opacity: .75; border-style: dashed; }

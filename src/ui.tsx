@@ -36,11 +36,11 @@ export const Icon = {
   ),
 };
 
-/** Фирменный знак: лист в круге, как печать организации. */
+/** Логотип Yashil Qo'llar (ладонь с ростком) в круге — как печать организации. */
 export function Seal({ size = 44 }: { size?: number }) {
   return (
     <span class="seal" style={{ width: size, height: size }}>
-      <Icon.leaf />
+      <img src="/logo.jpg" alt="Yashil Qo'llar" />
     </span>
   );
 }

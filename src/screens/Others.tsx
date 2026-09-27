@@ -6,6 +6,7 @@ import { Avatar, Empty, Icon, Name, Seg, SecHead, Stamp } from "../ui";
 import { getThemePref, haptic, openLink, setThemePref, share, type ThemePref } from "../tg";
 import { badgesFor, isFounder, tilt } from "../fx";
 import { PassportCard } from "./Home";
+import { APP_VERSION } from "../version";
 import { EditProfile, PasswordSheet } from "./ProfileEdit";
 
 const QR_KEY = "yq_qr_v1";
@@ -136,8 +137,8 @@ export function Top({ onOpenProfile }: { onOpenProfile: (id: number) => void }) 
 
 // ─────────────────── Профиль — паспорт ───────────────────
 
-export function Profile({ data, onLang, onData }: {
-  data: Bootstrap; onLang: (l: Lang) => void; onData: (d: Bootstrap) => void;
+export function Profile({ data, onLang, onData, onShop, onWhatsNew }: {
+  data: Bootstrap; onLang: (l: Lang) => void; onData: (d: Bootstrap) => void; onShop: () => void; onWhatsNew: () => void;
 }) {
   const { user, history } = data;
   const [theme, setTheme] = useState<ThemePref>(getThemePref());
@@ -220,6 +221,12 @@ export function Profile({ data, onLang, onData }: {
         )}
       </div>
 
+      <button class="duty tap" onClick={onShop}>
+        <span class="duty-ico">🛍</span>
+        <span class="duty-text"><b>{t("shop")} <span class="beta-chip mono">{t("shopSoon")}</span></b><small>{t("shopTeaser")}</small></span>
+        <Icon.chevron />
+      </button>
+
       <SecHead n="04" title={t("theme")} />
       <Seg<ThemePref>
         value={theme}
@@ -247,6 +254,7 @@ export function Profile({ data, onLang, onData }: {
         <span>Made with <i>♥</i> by</span>
         <b>Salokhiddin Usmonov</b>
         <small class="mono">YASHIL QO'LLAR · {new Date().getFullYear()}</small>
+        <button class="ver tap mono" onClick={onWhatsNew}>v{APP_VERSION} · {t("whatsNew")} →</button>
       </div>
 
       <EditProfile key={String(editing)} data={data} open={editing} onClose={() => setEditing(false)} onSaved={onData} />

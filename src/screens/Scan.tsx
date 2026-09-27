@@ -8,9 +8,10 @@ import { Avatar, Empty, Icon } from "../ui";
 import { canScan, haptic, tg } from "../tg";
 import { confetti } from "../fx";
 
-interface FeedItem extends CheckInResult { key: number }
+interface FeedItem extends CheckInResult { key: number; undone?: boolean }
+interface Pending { payload: { qr?: string; user_id?: number }; r: CheckInResult }
 
-export function Scan() {
+export function Scan({ regionLabel }: { regionLabel: string | null }) {
   const [events, setEvents] = useState<EventItem[] | null>(null);
   const [eventId, setEventId] = useState<number | null>(null);
   const [counts, setCounts] = useState<{ registered: number; attended: number } | null>(null);
@@ -19,6 +20,7 @@ export function Scan() {
   const [continuous, setContinuous] = useState(true);
   const [q, setQ] = useState("");
   const [found, setFound] = useState<Person[]>([]);
+  const [pending, setPending] = useState<Pending | null>(null);
 
   const stoppedByUser = useRef(false);
   const lastText = useRef<{ text: string; at: number }>({ text: "", at: 0 });
@@ -43,10 +45,18 @@ export function Scan() {
     return () => tg!.offEvent("scanQrPopupClosed", onClosed);
   }, []);
 
-  async function submit(payload: { qr?: string; user_id?: number }) {
+  async function submit(payload: { qr?: string; user_id?: number }, force = false) {
     if (!eventId) return;
     try {
-      const r = await api.checkIn(eventId, payload);
+      const r = await api.checkIn(eventId, force ? { ...payload, force: true } : payload);
+      if (r.result === "confirm_region") {
+        // человек из другого региона — скорее всего выбрано не то мероприятие: спрашиваем
+        stoppedByUser.current = true;
+        haptic("warning");
+        setPending({ payload, r });
+        return;
+      }
+      setPending(null);
       haptic(r.result === "ok" ? "success" : r.result === "already" ? "warning" : "error");
       if (r.result === "ok") confetti();
       const item = { ...r, key: Date.now() };
@@ -58,10 +68,27 @@ export function Scan() {
     }
   }
 
+  async function undo(item: FeedItem) {
+    if (!eventId || !item.person) return;
+    try {
+      const r = await api.undo(eventId, item.person.id, !!item.auto_added);
+      haptic("warning");
+      const upd = { ...item, undone: true };
+      setLast(upd);
+      setFeed((f) => f.map((x) => (x.key === item.key ? upd : x)));
+      if (r.counts) setCounts(r.counts);
+    } catch {
+      haptic("error");
+    }
+  }
+
   function openScanner() {
     if (!tg || !eventId) return;
     stoppedByUser.current = false;
-    tg.showScanQrPopup({ text: t("scanPopup") }, (text) => {
+    const title = events?.find((e) => e.id === eventId)?.title ?? "";
+    // у Telegram лимит 64 символа на подсказку
+    const hint = t("scanPopupFor", { title: title.length > 28 ? title.slice(0, 27) + "…" : title });
+    tg.showScanQrPopup({ text: hint.length <= 64 ? hint : t("scanPopup") }, (text) => {
       // камера отдаёт один и тот же код много раз в секунду — фильтруем повторы
       const now = Date.now();
       if (text === lastText.current.text && now - lastText.current.at < 4000) return;
@@ -87,6 +114,7 @@ export function Scan() {
       <h1 class="title">{t("scanTitle")}</h1>
 
       <div class="muted small label">{t("pickEvent")}</div>
+      {regionLabel && <div class="scan-region small"><span>📍</span>{t("scanRegionOnly", { region: regionLabel })}</div>}
       <div class="chips">
         {events.map((e) => (
           <button key={e.id} class={`echip tap ${e.id === eventId ? "on" : ""}`} onClick={() => { haptic("light"); setEventId(e.id); }}>
@@ -95,6 +123,17 @@ export function Scan() {
           </button>
         ))}
       </div>
+
+      {(() => {
+        const ev = events.find((e) => e.id === eventId);
+        return ev && (
+          <div class="scan-now">
+            <span class="mono label-xs">{t("scanNow")}</span>
+            <b>{ev.title}</b>
+            <small>📍 {ev.region_label} · {fmt.dayMonth(ev.date)} · {fmt.time(ev.date)}</small>
+          </div>
+        );
+      })()}
 
       {counts && (
         <div class="counter">
@@ -118,7 +157,21 @@ export function Scan() {
         {t("continuous")}
       </label>
 
-      {last && <ResultCard r={last} />}
+      {pending && (
+        <div class="confirm-region">
+          <b>⚠️ {t("scanConfirmTitle")}</b>
+          <div>{t("scanConfirmText", {
+            name: pending.r.person?.fullname ?? "—", pregion: pending.r.person_region ?? "?",
+            title: pending.r.event_title ?? "", eregion: pending.r.event_region ?? "?",
+          })}</div>
+          <div class="row gap wide">
+            <button class="btn btn-primary grow-btn tap" onClick={() => submit(pending.payload, true)}>{t("scanConfirmYes")}</button>
+            <button class="btn btn-line grow-btn tap" onClick={() => { setPending(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{t("scanConfirmNo")}</button>
+          </div>
+        </div>
+      )}
+
+      {last && !pending && <ResultCard r={last} onUndo={() => undo(last)} />}
 
       <div class="search">
         <Icon.search />
@@ -137,8 +190,8 @@ export function Scan() {
           {feed.slice(1).map((r) => (
             <div class="lrow" key={r.key}>
               <span class={`dot dot-${r.result}`} />
-              <span class="lname">{r.person?.fullname ?? t(r.result === "bad_qr" ? "scanBadQr" : "scanNotFound")}</span>
-              <span class="muted small">{r.result === "ok" ? "+10" : r.result === "already" ? "✓" : "✕"}</span>
+              <span class="lname">{r.person?.fullname ?? t(r.result === "bad_qr" ? "scanBadQr" : r.result === "other_region" ? "scanOtherRegion" : "scanNotFound")}</span>
+              <span class="muted small">{r.undone ? "↩" : r.result === "ok" ? "+10" : r.result === "already" ? "✓" : "✕"}</span>
             </div>
           ))}
         </div>
@@ -147,19 +200,22 @@ export function Scan() {
   );
 }
 
-function ResultCard({ r }: { r: FeedItem }) {
+function ResultCard({ r, onUndo }: { r: FeedItem; onUndo: () => void }) {
   const ok = r.result === "ok";
-  const text = ok ? (r.auto_added ? t("scanAdded") : t("scanOk"))
+  const text = r.undone ? t("scanUndone")
+    : ok ? (r.auto_added ? t("scanAdded") : t("scanOk"))
     : r.result === "already" ? t("scanAlready")
-    : r.result === "bad_qr" ? t("scanBadQr") : t("scanNotFound");
+    : r.result === "bad_qr" ? t("scanBadQr")
+    : r.result === "other_region" ? t("scanOtherRegion") : t("scanNotFound");
   return (
-    <div class={`result result-${r.result}`} key={r.key}>
+    <div class={`result result-${r.undone ? "undone" : r.result}`} key={r.key}>
       {r.person ? <Avatar src={r.person.photo} name={r.person.fullname} size={52} /> : <div class="result-x">✕</div>}
       <div>
         <b>{r.person?.fullname ?? "—"}</b>
         <div>{text}</div>
+        {ok && !r.undone && <button class="undo tap" onClick={onUndo}>↩ {t("scanUndo")}</button>}
       </div>
-      {ok && <div class="result-pts">+10</div>}
+      {ok && !r.undone && <div class="result-pts">+10</div>}
     </div>
   );
 }

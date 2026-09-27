@@ -1,6 +1,6 @@
 // API-клиент Mini App. Бэкенд — тот же Django, что у бота (API/webapp.py).
 import { tg } from "./tg";
-import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch, PublicUser, TeamMember } from "./types";
+import type { Bootstrap, CheckInResult, EventItem, StaffEvents, Top, Person, ProfilePatch, PublicUser, ShopState, TeamMember } from "./types";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE || "https://api.yashilqollar.uz").replace(/\/$/, "");
 
@@ -107,7 +107,11 @@ export const api = {
   team: () => request<{ team: TeamMember[] }>("/webapp/team/"),
   user: (id: number) => request<PublicUser>(`/webapp/users/${id}/`),
   staffEvents: () => request<StaffEvents>("/webapp/staff/events/"),
-  checkIn: (projectId: number, payload: { qr?: string; user_id?: number }) =>
+  undo: (projectId: number, userId: number, autoAdded: boolean) =>
+    post<{ result: "undone" | "nothing"; counts?: { registered: number; attended: number } }>("/webapp/staff/undo/", { project_id: projectId, user_id: userId, auto_added: autoAdded }),
+  checkIn: (projectId: number, payload: { qr?: string; user_id?: number; force?: boolean }) =>
     post<CheckInResult>("/webapp/staff/checkin/", { project_id: projectId, ...payload }),
+  shop: () => request<ShopState>("/webapp/shop/"),
+  wish: (item: string) => post<ShopState>("/webapp/shop/", { item }),
   search: (q: string) => request<{ results: Person[] }>(`/webapp/staff/search/?q=${encodeURIComponent(q)}`),
 };
