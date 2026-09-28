@@ -892,3 +892,6 @@ h1, h2 { margin: 0; }
 .rp-result p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 360px; }
 .rp-result .btn { width: 100%; max-width: 360px; }
 .rp-emoji { font-size: 64px; line-height: 1; animation: wr-in .5s both; }
+
+.scan-region.admin { color: var(--sun); border-color: color-mix(in srgb, var(--sun) 45%, transparent); }
+.shot-btn { width: 100%; margin-top: 10px; }

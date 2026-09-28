@@ -151,6 +151,7 @@ export interface Top {
 export interface StaffEvents {
   events: EventItem[];
   default: number | null;
+  admin?: boolean;   // 👑 все регионы и прошедшие 60 дней
 }
 
 export interface CheckInResult {

@@ -11,7 +11,30 @@ import { confetti } from "../fx";
 interface FeedItem extends CheckInResult { key: number; undone?: boolean }
 interface Pending { payload: { qr?: string; user_id?: number }; r: CheckInResult }
 
-export function Scan({ regionLabel }: { regionLabel: string | null }) {
+/** QR с картинки (скриншот, который прислал человек): встроенный BarcodeDetector, иначе jsQR (грузится только тут). */
+async function readQrFromFile(file: File): Promise<string | null> {
+  const bmp = await createImageBitmap(file).catch(() => null);
+  const img = bmp ?? await new Promise<HTMLImageElement | null>((res) => {
+    const i = new Image(); const u = URL.createObjectURL(file);
+    i.onload = () => res(i); i.onerror = () => res(null); i.src = u;
+  });
+  if (!img) return null;
+  const BD = (window as unknown as { BarcodeDetector?: new (o: object) => { detect(s: CanvasImageSource): Promise<{ rawValue: string }[]> } }).BarcodeDetector;
+  if (BD) {
+    try { const r = await new BD({ formats: ["qr_code"] }).detect(img); if (r[0]) return r[0].rawValue; } catch { /* нет поддержки — jsQR */ }
+  }
+  const w = "naturalWidth" in img ? img.naturalWidth : img.width, h = "naturalHeight" in img ? img.naturalHeight : img.height;
+  const k = Math.min(1, 1400 / Math.max(w, h));
+  const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const ctx = c.getContext("2d")!; ctx.drawImage(img, 0, 0, c.width, c.height);
+  const { default: jsQR } = await import("jsqr");
+  const data = ctx.getImageData(0, 0, c.width, c.height);
+  return jsQR(data.data, c.width, c.height, { inversionAttempts: "attemptBoth" })?.data ?? null;
+}
+
+export function Scan({ regionLabel, admin }: { regionLabel: string | null; admin?: boolean }) {
+  const shotIn = useRef<HTMLInputElement>(null);
+  const [reading, setReading] = useState(false);
   const [events, setEvents] = useState<EventItem[] | null>(null);
   const [eventId, setEventId] = useState<number | null>(null);
   const [counts, setCounts] = useState<{ registered: number; attended: number } | null>(null);
@@ -100,6 +123,22 @@ export function Scan({ regionLabel }: { regionLabel: string | null }) {
     });
   }
 
+  async function fromScreenshot(files: FileList | null) {
+    const f = files?.[0];
+    if (shotIn.current) shotIn.current.value = "";
+    if (!f || !eventId) return;
+    setReading(true);
+    const text = await readQrFromFile(f).catch(() => null);
+    setReading(false);
+    if (!text) {
+      haptic("error");
+      const item = { result: "bad_qr" as const, key: Date.now() };
+      setLast(item); setFeed((x) => [item, ...x].slice(0, 30));
+      return;
+    }
+    submit({ qr: text });
+  }
+
   async function search(v: string) {
     setQ(v);
     if (v.trim().length < 2) { setFound([]); return; }
@@ -115,6 +154,7 @@ export function Scan({ regionLabel }: { regionLabel: string | null }) {
 
       <div class="muted small label">{t("pickEvent")}</div>
       {regionLabel && <div class="scan-region small"><span>📍</span>{t("scanRegionOnly", { region: regionLabel })}</div>}
+      {admin && <div class="scan-region small admin"><span>👑</span>{t("scanAdminAll")}</div>}
       <div class="chips">
         {events.map((e) => (
           <button key={e.id} class={`echip tap ${e.id === eventId ? "on" : ""}`} onClick={() => { haptic("light"); setEventId(e.id); }}>
@@ -151,6 +191,10 @@ export function Scan({ regionLabel }: { regionLabel: string | null }) {
       ) : (
         <div class="card warn small">{t("scanUnsupported")}</div>
       )}
+      <button class="btn btn-ghost shot-btn tap" disabled={reading} onClick={() => shotIn.current?.click()}>
+        🖼 {reading ? t("scanReading") : t("scanFromShot")}
+      </button>
+      <input ref={shotIn} type="file" accept="image/*" hidden onChange={(e) => fromScreenshot((e.target as HTMLInputElement).files)} />
       <label class="toggle">
         <input type="checkbox" checked={continuous} onChange={(e) => setContinuous((e.target as HTMLInputElement).checked)} />
         <span class="track"><i /></span>

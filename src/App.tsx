@@ -114,7 +114,8 @@ export default function App() {
 
   const staff = data.user.is_staff;
   // Сканер: основатель — все регионы, остальные — только свой (сервер проверяет так же)
-  const scanRegion = data.user.role !== "Founder" && data.user.region ? data.user.region_label : null;
+  // 👑 is_admin — все регионы и прошедшие мероприятия (сервер проверяет так же)
+  const scanRegion = data.user.role !== "Founder" && !data.user.is_admin && data.user.region ? data.user.region_label : null;
   const closeWn = () => { setWnOpen(false); markWhatsNewSeen(); };
 
   if (shopOpen) {
@@ -138,7 +139,7 @@ export default function App() {
           onMap={(report) => { haptic("light"); openMap(null, report); }} />}
         {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
-        {tab === "scan" && staff && <Scan regionLabel={scanRegion} />}
+        {tab === "scan" && staff && <Scan regionLabel={scanRegion} admin={data.user.is_admin} />}
         {tab === "top" && <Top onOpenProfile={setProfileId} />}
         {tab === "profile" && <Profile data={data} onLang={changeLang} onData={(d) => apply(d)} onShop={() => setShopOpen(true)} onWhatsNew={() => setWnOpen(true)} onImpact={setImpactId} />}
       </main>
