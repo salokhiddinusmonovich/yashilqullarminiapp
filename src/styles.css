@@ -445,7 +445,7 @@ h1, h2 { margin: 0; }
 .result > div:nth-child(2) { flex: 1; min-width: 0; }
 .result-ok { color: var(--leaf); }
 .result-already { color: var(--sun); }
-.result-not_found, .result-bad_qr, .result-no_event { color: var(--clay); }
+.result-not_found, .result-bad_qr, .result-no_event, .result-wrong_region, .result-other_region { color: var(--clay); }
 .result b { color: var(--ink); }
 .result-pts { font: 800 26px var(--f-display); }
 .result-x { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; border: 2px solid currentColor; font-size: 22px; }

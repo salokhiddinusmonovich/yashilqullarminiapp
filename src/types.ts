@@ -155,7 +155,7 @@ export interface StaffEvents {
 }
 
 export interface CheckInResult {
-  result: "ok" | "already" | "not_found" | "bad_qr" | "no_event" | "other_region" | "confirm_region";
+  result: "ok" | "already" | "not_found" | "bad_qr" | "no_event" | "other_region" | "confirm_region" | "wrong_region";
   person_region?: string;
   event_region?: string;
   event_title?: string;

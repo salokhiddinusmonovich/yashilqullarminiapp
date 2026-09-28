@@ -80,6 +80,8 @@ export function Scan({ regionLabel, admin }: { regionLabel: string | null; admin
         return;
       }
       setPending(null);
+      // человек из другого региона — ошибка, не отмечаем; сканирование подряд останавливаем, чтобы заметили
+      if (r.result === "wrong_region") stoppedByUser.current = true;
       haptic(r.result === "ok" ? "success" : r.result === "already" ? "warning" : "error");
       if (r.result === "ok") confetti();
       const item = { ...r, key: Date.now() };
@@ -234,7 +236,7 @@ export function Scan({ regionLabel, admin }: { regionLabel: string | null; admin
           {feed.slice(1).map((r) => (
             <div class="lrow" key={r.key}>
               <span class={`dot dot-${r.result}`} />
-              <span class="lname">{r.person?.fullname ?? t(r.result === "bad_qr" ? "scanBadQr" : r.result === "other_region" ? "scanOtherRegion" : "scanNotFound")}</span>
+              <span class="lname">{r.person?.fullname ?? t(r.result === "bad_qr" ? "scanBadQr" : r.result === "other_region" ? "scanOtherRegion" : "scanNotFound")}{r.result === "wrong_region" && <span class="muted small"> · ⛔️ {r.person_region}</span>}</span>
               <span class="muted small">{r.undone ? "↩" : r.result === "ok" ? "+10" : r.result === "already" ? "✓" : "✕"}</span>
             </div>
           ))}
@@ -250,6 +252,7 @@ function ResultCard({ r, onUndo }: { r: FeedItem; onUndo: () => void }) {
     : ok ? (r.auto_added ? t("scanAdded") : t("scanOk"))
     : r.result === "already" ? t("scanAlready")
     : r.result === "bad_qr" ? t("scanBadQr")
+    : r.result === "wrong_region" ? t("scanWrongRegion", { pregion: r.person_region ?? "?", eregion: r.event_region ?? "?" })
     : r.result === "other_region" ? t("scanOtherRegion") : t("scanNotFound");
   return (
     <div class={`result result-${r.undone ? "undone" : r.result}`} key={r.key}>
