@@ -37,10 +37,12 @@ export default function App() {
   const [impactId, setImpactId] = useState<number | null>(null);
   const [wrOpen, setWrOpen] = useState(false);
   // 🗺 эко-карта грузится отдельным файлом (Leaflet) — только когда её открыли
-  const [MapView, setMapView] = useState<ComponentType<{ bot: string; focus?: number | null; onClose: () => void }> | null>(null);
+  const [MapView, setMapView] = useState<ComponentType<{ focus?: number | null; region: string | null; report?: boolean; onClose: () => void }> | null>(null);
   const [mapFocus, setMapFocus] = useState<number | null>(null);
-  function openMap(focus: number | null = null) {
+  const [mapReport, setMapReport] = useState(false);
+  function openMap(focus: number | null = null, report = false) {
     setMapFocus(focus);
+    setMapReport(report);
     import("./screens/EcoMap").then((m) => setMapView(() => m.EcoMap)).catch(() => {});
   }
 
@@ -76,6 +78,7 @@ export default function App() {
       // «🗺 Eko-xaritada ko'rish» из бота: ?spot=12 или ?map=1
       const spot = qs.get("spot") || (sp.startsWith("spot_") ? sp.slice(5) : null);
       if (spot || qs.get("map") || sp === "map") openMap(spot ? Number(spot) : null);
+      if (qs.get("report") || sp === "report") openMap(null, true);
     }
   }
 
@@ -132,7 +135,7 @@ export default function App() {
       <main key={tab} class="fade">
         {tab === "home" && <Home data={data} onOpenEvent={setSheet} onGo={go} onShop={() => { haptic("light"); setShopOpen(true); }}
           onImpact={(id) => { haptic("light"); setImpactId(id); }} onWrapped={() => { haptic("medium"); setWrOpen(true); }}
-          onMap={() => { haptic("light"); openMap(); }} />}
+          onMap={(report) => { haptic("light"); openMap(null, report); }} />}
         {tab === "events" && <Events events={data.events} userRegion={data.user.region} onOpen={setSheet} />}
         {tab === "qr" && <QR data={data} />}
         {tab === "scan" && staff && <Scan regionLabel={scanRegion} />}
@@ -151,7 +154,7 @@ export default function App() {
 
       <ProfileSheet id={profileId} onClose={() => setProfileId(null)} />
       <ImpactSheet id={impactId} onClose={() => setImpactId(null)} />
-      {MapView && <MapView bot={data.bot_username} focus={mapFocus} onClose={() => setMapView(null)} />}
+      {MapView && <MapView focus={mapFocus} region={data.user.region} report={mapReport} onClose={() => setMapView(null)} />}
       {wrOpen && <Wrapped onClose={() => setWrOpen(false)} shareLink={data.referral?.link ?? `https://t.me/${data.bot_username}`} />}
       <WhatsNew open={wnOpen} onClose={closeWn} />
       <EventSheet key={sheet?.id} e={sheet} bot={data.bot_username} userRegion={data.user.region} onClose={() => setSheet(null)} onJoined={onJoined} onShowQr={() => go("qr")} />

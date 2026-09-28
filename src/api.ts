@@ -121,5 +121,16 @@ export const api = {
   wrapped: () => (import.meta.env.DEV && !tg ? import("./dev").then((m) => m.DEV_WRAPPED) : request<WrappedData>("/webapp/wrapped/")),
   spots: () => (import.meta.env.DEV && !tg ? import("./dev").then((m) => ({ spots: m.DEV_SPOTS })) : request<{ spots: SpotPoint[] }>("/webapp/spots/")),
   spot: (id: number) => (import.meta.env.DEV && !tg ? import("./dev").then((m) => m.devSpot(id)) : request<SpotFull>(`/webapp/spots/${id}/`)),
+  spotPhoto: (blob: Blob) => {
+    if (import.meta.env.DEV && !tg) return new Promise<{ token: string }>((r) => setTimeout(() => r({ token: Math.random().toString(36).slice(2) }), 600));
+    const fd = new FormData();
+    fd.append("photo", blob, "photo.jpg");
+    return request<{ token: string }>("/webapp/spots/photo/", { method: "POST", body: fd });
+  },
+  spotCreate: (body: { tokens: string[]; lat: number; lon: number; size: string; kind: string; access: string; note: string; force?: boolean }) =>
+    import.meta.env.DEV && !tg
+      ? import("./dev").then((m) => (body.force ? { result: "ok" as const, spot: { ...m.DEV_SPOTS[10], id: 99, status: "new" as const, mine: true, lat: body.lat, lon: body.lon } } : { result: "near" as const, spot: m.DEV_SPOTS[0] }))
+      : post<{ result: "ok" | "near" | "not_uz" | "limit" | "bad"; spot?: SpotPoint; n?: number }>("/webapp/spots/", body),
+  spotConfirm: (id: number) => (import.meta.env.DEV && !tg ? Promise.resolve({ result: "ok", confirms: 3 }) : post<{ result: string; confirms: number }>(`/webapp/spots/${id}/confirm/`, {})),
   search: (q: string) => request<{ results: Person[] }>(`/webapp/staff/search/?q=${encodeURIComponent(q)}`),
 };

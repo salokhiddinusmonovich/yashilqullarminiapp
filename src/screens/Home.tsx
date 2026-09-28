@@ -15,7 +15,7 @@ interface Props {
   onShop: () => void;
   onImpact: (eventId: number) => void;
   onWrapped: () => void;
-  onMap: () => void;
+  onMap: (report?: boolean) => void;
 }
 
 /** То, что нужно паспорту, — есть и у меня (Bootstrap.user), и у чужого профиля. */
@@ -138,7 +138,7 @@ export function Home({ data, onOpenEvent, onGo, onShop, onImpact, onWrapped, onM
 
       {data.impact && (user.attended_count > 0 || data.impact.photos.length > 0) && <ImpactCard impact={data.impact} onOpen={onImpact} />}
 
-      {data.spots && <EcoMapCard spots={data.spots} onOpen={onMap} />}
+      {data.spots && <EcoMapCard spots={data.spots} onOpen={() => onMap(false)} onReport={() => onMap(true)} />}
 
       <ShopTeaser balance={user.balance} onOpen={onShop} />
 

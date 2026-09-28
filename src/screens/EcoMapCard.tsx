@@ -2,9 +2,9 @@
 import { t } from "../i18n";
 
 /** Главная: карточка «🗺 Eko-xarita» с цифрами. */
-export function EcoMapCard({ spots, onOpen }: { spots: { open: number; cleaned: number; mine: number }; onOpen: () => void }) {
+export function EcoMapCard({ spots, onOpen, onReport }: { spots: { open: number; cleaned: number; mine: number }; onOpen: () => void; onReport: () => void }) {
   return (
-    <button class="mapcard tap" onClick={onOpen}>
+    <div class="mapcard tap" role="button" onClick={onOpen}>
       <div class="mapcard-art" aria-hidden="true">
         <i class="p1" /><i class="p2" /><i class="p3" /><i class="p4" />
       </div>
@@ -13,6 +13,7 @@ export function EcoMapCard({ spots, onOpen }: { spots: { open: number; cleaned: 
         <small>{t("homeMapText", { open: spots.open, cleaned: spots.cleaned })}</small>
         {spots.mine > 0 && <small class="mapcard-mine">★ {t("homeMapMine", { n: spots.mine })}</small>}
       </div>
-    </button>
+      <button class="mapcard-report tap" onClick={(e) => { e.stopPropagation(); onReport(); }}>📍<small>{t("rpQuick")}</small></button>
+    </div>
   );
 }

@@ -22,6 +22,11 @@ interface TgWebApp {
   showScanQrPopup(params: { text?: string }, cb?: (text: string) => boolean | void): void;
   requestContact?(cb: (ok: boolean, res?: { responseUnsafe?: { contact?: { phone_number?: string } } }) => void): void;
   closeScanQrPopup(): void;
+  LocationManager?: {
+    isInited: boolean; isLocationAvailable: boolean;
+    init(cb?: () => void): void;
+    getLocation(cb: (data: { latitude: number; longitude: number } | null) => void): void;
+  };
   shareToStory?(mediaUrl: string, params?: { text?: string; widget_link?: { url: string; name?: string } }): void;
   downloadFile?(params: { url: string; file_name: string }, cb?: (ok: boolean) => void): void;
   onEvent(event: string, cb: (...args: unknown[]) => void): void;
@@ -112,6 +117,25 @@ export function shareStory(mediaUrl: string, text: string): boolean {
     tg.shareToStory(mediaUrl, { text });
     return true;
   } catch { return false; }
+}
+
+/** Где я сейчас: геолокация Telegram (Bot API 8.0+), иначе браузерная. null — нет доступа / не удалось. */
+export function getLocation(): Promise<{ lat: number; lon: number } | null> {
+  const browser = () => new Promise<{ lat: number; lon: number } | null>((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      () => resolve(null), { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  });
+  const lm = tg?.LocationManager;
+  if (!lm || !tg!.isVersionAtLeast("8.0")) return browser();
+  return new Promise((resolve) => {
+    const ask = () => {
+      if (!lm.isLocationAvailable) return browser().then(resolve);
+      lm.getLocation((d) => (d ? resolve({ lat: d.latitude, lon: d.longitude }) : browser().then(resolve)));
+    };
+    try { lm.isInited ? ask() : lm.init(ask); } catch { browser().then(resolve); }
+  });
 }
 
 export const canStory = () => !!tg?.shareToStory && tg.isVersionAtLeast("7.8");

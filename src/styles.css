@@ -782,6 +782,8 @@ h1, h2 { margin: 0; }
 :root { --st-new: #9ca3af; --st-accepted: #ef4444; --st-planned: #eab308; --st-cleaned: #22c55e; }
 .ecomap { position: fixed; inset: 0; z-index: 90; background: var(--bg); animation: fadein .2s; }
 .ecomap-map { position: absolute; inset: 0; background: var(--paper-2); z-index: 0; isolation: isolate; }
+.ecomap-map.dark .leaflet-tile-pane, .rp-map-box.dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.55); }
+.leaflet-container { font-family: var(--f-body); }
 .ecomap .sheet-wrap { z-index: 1000; }
 .ecomap-map .leaflet-control-attribution { font-size: 9px; background: color-mix(in srgb, var(--bg) 70%, transparent); color: var(--muted); }
 .ecomap-map .leaflet-control-attribution a { color: var(--muted); }
@@ -845,3 +847,48 @@ h1, h2 { margin: 0; }
 .mapcard-text b { font-size: 17px; font-weight: 800; }
 .mapcard-text small { color: var(--muted); font-size: 12.5px; }
 .mapcard-mine { color: var(--sun) !important; font-weight: 700; }
+
+.mapcard { cursor: pointer; }
+.mapcard-text { flex: 1; }
+.mapcard-report { flex: none; display: grid; justify-items: center; gap: 2px; padding: 10px 10px; border-radius: 14px; font-size: 20px;
+  background: color-mix(in srgb, var(--leaf) 16%, var(--paper-2)); border: 1px solid color-mix(in srgb, var(--leaf) 45%, transparent); }
+.mapcard-report small { font-size: 11px; font-weight: 800; color: var(--leaf); }
+.spin-sm { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--ink) 20%, transparent); border-top-color: var(--leaf); animation: spin .8s linear infinite; }
+
+/* ── 📍 форма «Iflos joy» ── */
+.rp { position: fixed; inset: 0; z-index: 1100; background: var(--bg); display: flex; flex-direction: column; animation: up .3s cubic-bezier(.2, .9, .3, 1); }
+.rp-head { display: flex; align-items: center; gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--line); }
+.rp-head b { flex: 1; font-size: 18px; font-weight: 800; }
+.rp-body { flex: 1; overflow-y: auto; padding: 6px 16px 20px; -webkit-overflow-scrolling: touch; }
+.rp-body section { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px dashed var(--line-strong); }
+.rp-body section:last-child { border-bottom: 0; }
+.rp-body h3 { margin: 6px 0 0; font: 800 15px var(--f-display); letter-spacing: -.01em; }
+.rp-pics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rp-pic, .rp-add { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; }
+.rp-pic img { width: 100%; height: 100%; object-fit: cover; }
+.rp-pic.up img { opacity: .5; }
+.rp-pic .spin-sm { position: absolute; left: 50%; top: 50%; margin: -11px 0 0 -11px; }
+.rp-pic.bad { outline: 2px solid var(--clay); }
+.rp-pic-bad { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--clay); color: #fff; font-weight: 800; }
+.rp-pic-x { position: absolute; right: 5px; top: 5px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, .55); color: #fff; font-size: 12px; }
+.rp-add { display: grid; place-content: center; justify-items: center; gap: 2px; border: 2px dashed var(--line-strong); color: var(--leaf); background: var(--paper); }
+.rp-add span { font-size: 30px; line-height: 1; }
+.rp-add small { font-size: 11.5px; font-weight: 800; }
+.rp-map { position: relative; height: 230px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); isolation: isolate; }
+.rp-map-box { position: absolute; inset: 0; z-index: 0; background: var(--paper-2); }
+.rp-crosshair { position: absolute; left: 50%; top: 50%; z-index: 500; transform: translate(-15px, -36px); pointer-events: none; }
+.rp-crosshair .spot-pin { animation: none; }
+.rp-gps { position: absolute; left: 10px; bottom: 10px; z-index: 500; height: 36px; padding: 0 12px; border-radius: 10px; font-weight: 800; font-size: 13px;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
+.rp-gps:disabled { opacity: .7; }
+.rp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rp-chip { padding: 9px 13px; border-radius: 12px; font-weight: 700; font-size: 13.5px; background: var(--paper); border: 1.5px solid var(--line); }
+.rp-chip.on { background: color-mix(in srgb, var(--leaf) 18%, var(--paper)); border-color: var(--leaf); color: var(--ink); }
+.rp-note { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); resize: none; font-size: 14px; }
+.rp-foot { display: grid; gap: 6px; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); }
+.rp-foot small { text-align: center; }
+.rp-result { flex: 1; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; }
+.rp-result b { font-size: 26px; font-weight: 800; }
+.rp-result p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 360px; }
+.rp-result .btn { width: 100%; max-width: 360px; }
+.rp-emoji { font-size: 64px; line-height: 1; animation: wr-in .5s both; }
