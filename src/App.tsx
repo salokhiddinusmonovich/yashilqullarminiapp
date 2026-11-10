@@ -16,6 +16,7 @@ import { ImpactSheet } from "./screens/Impact";
 import { Wrapped } from "./screens/Wrapped";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "./version";
 import { DEV_DATA } from "./dev";
+import { getSeasonLogo } from "./season";
 
 type Tab = "home" | "events" | "qr" | "scan" | "top" | "profile";
 type Status = "loading" | "ready" | "unregistered" | "error" | "outside";
@@ -166,7 +167,7 @@ export default function App() {
 function Splash() {
   return (
     <div class="splash">
-      <div class="splash-logo"><img src="/logo.jpg" alt="" /></div>
+      <div class="splash-logo"><img src={getSeasonLogo()} alt="" /></div>
       <div class="splash-name display">Yashil Qo'llar</div>
       <div class="mono label-xs">{t("passport").toUpperCase()}</div>
     </div>

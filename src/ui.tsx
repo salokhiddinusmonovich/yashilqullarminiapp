@@ -5,6 +5,7 @@ import type { EventItem } from "./types";
 import { t, fmt, relDay } from "./i18n";
 import { useBackButton } from "./tg";
 import { eventStyle, isFounder, tilt } from "./fx";
+import { getSeasonLogo } from "./season";
 
 const P = { fill: "none", stroke: "currentColor", "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round" } as const;
 
@@ -40,7 +41,7 @@ export const Icon = {
 export function Seal({ size = 44 }: { size?: number }) {
   return (
     <span class="seal" style={{ width: size, height: size }}>
-      <img src="/logo.jpg" alt="Yashil Qo'llar" />
+      <img src={getSeasonLogo()} alt="Yashil Qo'llar" />
     </span>
   );
 }
