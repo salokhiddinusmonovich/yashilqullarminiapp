@@ -53,7 +53,7 @@ export function Events({ events, userRegion, onOpen }: {
   );
 }
 
-type JoinState = "idle" | "loading" | "done" | "subscribe" | "gone" | "full" | "region";
+type JoinState = "idle" | "loading" | "done" | "subscribe" | "gone" | "full" | "region" | "noshow";
 
 export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: {
   e: EventItem | null;
@@ -102,6 +102,7 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
       if (r.event) { setWaitPos(r.event.my_wait ?? null); onJoined(r.event); }
       if (r.result === "waiting") haptic("success");
       if (r.result === "region") setState("region");
+      if (r.result === "noshow") setState("noshow");
     } catch {
       haptic("error");
     }
@@ -156,6 +157,7 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
         )}
         {foreign && <div class="notice warn"><b>{t("otherRegion")}</b><div>{t("otherRegionHint", { region: e.region_label })}</div></div>}
         {state === "gone" && <div class="notice warn">{t("gone")}</div>}
+        {state === "noshow" && <div class="notice warn"><b>{t("noShow")}</b><div>{t("noShowHint")}</div></div>}
         {(state === "full" || s.full) && !joined && !foreign && (
           <div class="notice warn">
             <b>{waitPos ? t("waitYou", { pos: waitPos }) : t("fullErr")}</b>
@@ -180,7 +182,7 @@ export function EventSheet({ e, bot, userRegion, onClose, onJoined, onShowQr }: 
             {waitPos ? t("waitLeave") : t("waitJoin")}
           </button>
         ) : (
-          <button class="btn btn-primary tap" disabled={foreign || s.full || state === "loading"} onClick={join}>
+          <button class="btn btn-primary tap" disabled={foreign || s.full || state === "loading" || state === "noshow"} onClick={join}>
             {state === "loading" ? <span class="spin" /> : foreign ? <Icon.pin /> : <Icon.check />}
             {state === "loading" ? t("registering") : foreign ? t("otherRegion") : s.full ? t("full") : t("register")}
           </button>

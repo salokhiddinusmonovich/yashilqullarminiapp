@@ -3,6 +3,7 @@ import type { Lang } from "./types";
 
 const uz = {
   founder: "Asoschi", founderLine: "ASOSCHI · FOUNDER", tabRating: "Reyting", tabTeam: "Jamoa", teamHint: "Hududingiz jamoasi va loyiha asoschilari. Savol bo'lsa — shularga yozing.", teamEmpty: "Hududingizda hozircha jamoa yo'q", tapProfile: "Profilni ko'rish uchun bosing", notFound: "Topilmadi",
+  noShow: "Oldingi tadbirga kelmadingiz", noShowHint: "Yozilib kelmaganingiz uchun keyingi 2 ta tadbirga yozila olmaysiz — undan keyingisiga yana mumkin.",
   otherRegion: "Boshqa hudud", otherRegionHint: "Bu tadbir {region} uchun. Faqat o'z hududingizdagi tadbirlarga yozilish mumkin.",
   dateLbl: "Sana",
   passport: "Volontyor pasporti", stamps: "Muhrlar", stampsEmpty: "Birinchi muhr birinchi tadbirdan keyin paydo bo'ladi",
@@ -137,6 +138,7 @@ type Dict = typeof uz;
 
 const ru: Dict = {
   founder: "Основатель", founderLine: "ОСНОВАТЕЛЬ · FOUNDER", tabRating: "Рейтинг", tabTeam: "Команда", teamHint: "Команда вашего региона и основатели проекта. Есть вопрос — пишите им.", teamEmpty: "В вашем регионе пока нет команды", tapProfile: "Нажмите, чтобы открыть профиль", notFound: "Не найдено",
+  noShow: "Вы не пришли на прошлое мероприятие", noShowHint: "Вы записались и не пришли, поэтому на следующие 2 мероприятия записаться нельзя — потом снова можно.",
   otherRegion: "Другой регион", otherRegionHint: "Это мероприятие для региона «{region}». Записаться можно только в своём регионе.",
   dateLbl: "Дата",
   passport: "Паспорт волонтёра", stamps: "Печати", stampsEmpty: "Первая печать появится после первого мероприятия",
@@ -269,6 +271,7 @@ const ru: Dict = {
 
 const en: Dict = {
   founder: "Founder", founderLine: "FOUNDER · ASOSCHI", tabRating: "Leaderboard", tabTeam: "Team", teamHint: "Your region's team and the project founders. Questions? Reach out to them.", teamEmpty: "No team in your region yet", tapProfile: "Tap to view profile", notFound: "Not found",
+  noShow: "You missed the previous event", noShowHint: "You signed up and didn't come, so you can't join the next 2 events — after that you can again.",
   otherRegion: "Other region", otherRegionHint: "This event is for {region}. You can only register in your own region.",
   dateLbl: "Date",
   passport: "Volunteer passport", stamps: "Stamps", stampsEmpty: "Your first stamp appears after your first event",
